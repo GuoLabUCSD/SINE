@@ -91,7 +91,7 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 ## 3. Prep and Run NetMHCPan to get peptide binding to MHC class I. 
 -It is recommended to run this in parallel on a cluster for all samples in the experiment before proceeding to step 4.
 
--See ./examples for an example as to how the allele table should be formatted.
+-See ./examples to see how the allele table should be formatted.
    
 	./get_netmhcpan.sh -i isoforms_output_directory -a mhc_allele_table.txt -f output_directory_fastas -m output_directory_mapping_files -o output_directory_netmhcpan_results -s Sample_Name -p ../Neoantigen_Pipeline
 
@@ -127,7 +127,7 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 			Tab separated output table from NetMHCPan containing binding affinity scores for every possible peptide at every provided junction for the sample
 			
 ## 4. Parse the NetMHCpan .xls results files
--See ./examples for an example as to how the allele table should be formatted.
+-See ./examples to see how the allele table should be formatted.
    
 	./xls_parser.sh -i output_directory_netmhcpan_results -f output_directory_fastas/mhc_i -o output_directory_parsed_affinity -a mhc_allele_table -p ../Neoantigen_Pipeline
 
