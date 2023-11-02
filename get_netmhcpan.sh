@@ -50,10 +50,13 @@ if [ ! -d $output_directory_fastas/mhc_ii ]; then
         mkdir -p $output_directory_fastas/mhc_ii
 fi
 
+# make temp directory if necessary
+if [ ! -d $pipeline_directory/supplemental/temp_files ]; then
+	mkdir -p $pipeline_directory/supplemental/temp_files
+fi
 
 #Run Python Script
 echo "Running"
-
 
 python $pipeline_directory/supplemental/prepare_netmhcpan.py \
 --isoforms_dir $isoforms_dir \
