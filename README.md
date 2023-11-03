@@ -27,7 +27,7 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 
 
 ## Installation:
- 1. git clone https://github.com/GuoLabUCSD/Neoantigen_detection
+ 1. git clone https://github.com/GuoLabUCSD/Neoantigen_Detection
  2. From inside the Neoantigen_Detection directory users may need to run the below for each function's bash file
 	* chmod u+x {file ending in .sh}
 
