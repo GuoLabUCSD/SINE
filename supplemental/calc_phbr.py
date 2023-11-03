@@ -49,7 +49,7 @@ for patient in patient_list:
     pat_aff = pat_aff.join(pat_df).set_index('NetMHCpan_short_ID')
 
     #Drop Peptide Columns to assign back later
-    peptide_df = pat_aff.drop(['H-2-Kb', 'H-2-Db'], axis=1)
+    peptide_df = pat_aff[['junction','isoform', 'peptide', 'junc_aa_pos']]
     pat_aff = pat_aff.drop(['peptide', 'isoform', 'junc_aa_pos', 'junction'], axis=1)
 
     # take harmonic mean as in Marty et al. 2017
