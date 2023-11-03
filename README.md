@@ -1,4 +1,4 @@
-# Neoantigen_Detection:
+# Neoantigen_Pipeline:
 This tool aims to identify potential neoantigens produced as a result of aberrant alternative splicing in tumor tissue and calculate their PHBR binding affinity score through the use of Trinity, netMHCpan, user-provided junctions of interest, and sample BAM files.
 
 
@@ -27,8 +27,8 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 
 
 ## Installation:
- 1. git clone https://github.com/GuoLabUCSD/Neoantigen_Detection
- 2. From inside the Neoantigen_Detection directory users may need to run the below for each function's bash file
+ 1. git clone https://github.com/GuoLabUCSD/Neoantigen_Pipeline
+ 2. From inside the Neoantigen_Pipeline directory users may need to run the below for each function's bash file
 	* chmod u+x {file ending in .sh}
 
 
