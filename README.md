@@ -3,7 +3,7 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 
 
 ## Pre-Requisites:
- * BAM files for samples of interest
+ * BAM and corresponding BAI Index files for samples of interest
  * STAR SJ.out.tab files for samples of interest
 
 
