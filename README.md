@@ -42,13 +42,17 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 		-i      
 			New line separated list of junctions of interest to evaluate
 		-b      
-			Path to a Directory containing BAM files for the samples of interest and STAR's SJ.tab.out files
+			Path to a Directory containing BAM files for the tumor samples of interest and STAR's SJ.tab.out files
+   		-w
+     			Path to a Directory containing BAM files for the normal samples and STAR's SJ.tab.out files
 		-n      
 			Prefix to what the output files should be named
 		-o      
 			Output Directory to store files
 		-p
 			Path to the Neoantigen_Pipeline Directory
+   		-m
+     			Data is from a mouse genome [Optional]
 
 ### Output:
 		{Sample_Name}_junctions.tsv:
@@ -56,6 +60,9 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 	
 		{Filename_Prefix}_junctionsOfInterest_plusWT.tsv:
 			Table of junctions of interest and their corresponding wild-type junction for all samples with relevant data extracted from STAR's SJ.out.tab files.
+
+     		{Filename_Prefix}_ase_wt_pairs.tsv:
+       			Table of alternatively spliced junctions of interest and their found wild-type pairing where possible
 
  ## 2. Extract junction reads, perform Trinity De novo assembly, and translate all reading frames of the present isoforms. 
  -It is recommended to run this in parallel on a cluster for all samples in the experiment before proceeding to step 3.
