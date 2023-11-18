@@ -44,7 +44,7 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 		-b      
 			Path to a Directory containing BAM files for the tumor samples of interest and STAR's SJ.tab.out files
    		-w
-     			Path to a Directory containing BAM files for the normal samples and STAR's SJ.tab.out files
+     		Path to a Directory containing BAM files for the normal samples and STAR's SJ.tab.out files
 		-n      
 			Prefix to what the output files should be named
 		-o      
@@ -52,7 +52,7 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 		-p
 			Path to the Neoantigen_Pipeline Directory
    		-m
-     			Data is from a mouse genome [Optional]
+     		Data is from a mouse genome [Optional]
 
 ### Output:
 		{Sample_Name}_junctions.tsv:
@@ -61,8 +61,8 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 		{Filename_Prefix}_junctionsOfInterest_plusWT.tsv:
 			Table of junctions of interest and their corresponding wild-type junction for all samples with relevant data extracted from STAR's SJ.out.tab files.
 
-     		{Filename_Prefix}_ase_wt_pairs.tsv:
-       			Table of alternatively spliced junctions of interest and their found wild-type pairing where possible
+     	{Filename_Prefix}_ase_wt_pairs.tsv:
+       		Table of alternatively spliced junctions of interest and their found wild-type pairing where possible
 
  ## 2. Extract junction reads, perform Trinity De novo assembly, and translate all reading frames of the present isoforms. 
  -It is recommended to run this in parallel on a cluster for all samples in the experiment before proceeding to step 3.
@@ -85,15 +85,17 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 			Path to ouput directory where results should be stored
 		-p
 			Path to the directory where this pipeline is
+   		-m
+     		Data is from a mouse genome [Optional]
 
 ### Output:
-		..{isoforms_output_directory}/{Sample_Name/} Directory containing:
+		../{isoforms_output_directory}/{Sample_Name/} Directory containing:
 			{Sample_Name}.identify_junctions.sh: 
-				Bash file with the Trinity execution
-			intermediate_results: 
-				{chromosome}:{start-end} directory with Trinity output
-			neopeptides.tsv:
-				Tab separated table containing the assembled isoform, junction position (python-indexed), peptides (kmer length = 15), and the transcript ID
+				Bash file with the Trinity execution.
+		intermediate_results: 
+			{chromosome}:{start-end} directory with Trinity output.
+		neopeptides.tsv:
+			Tab separated table containing the assembled isoform, junction position (python-indexed), peptides (kmer length = 15), and the transcript ID.
 
 ## 3. Prep and Run NetMHCPan to get peptide binding to MHC class I. 
 -It is recommended to run this in parallel on a cluster for all samples in the experiment before proceeding to step 4.
@@ -105,55 +107,53 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 ### Arguments:
 		
 		-i
-			Path to a directory of samples containing isoform results from step 2. Ie) Output Directory from step 2 is the input directory here
+			Path to a directory of samples containing isoform results from step 2. Ie) Output Directory from step 2 is the input directory here.
 		-f
-			Path to an output directory to store fasta files of isoforms. This directory should have subdirectories labelled "mhc_i" and "mhc_ii"
+			Path to an output directory to store fasta files of isoforms. This directory should have subdirectories labelled "mhc_i" and "mhc_ii".
 		-m
 			Path to an output directory to store mapping files.
 		-o
-			Path to an output directory to store NetMHCpan results
+			Path to an output directory to store NetMHCpan results.
 		-a
-			Path to a tab-separated text file of MHC alleles to check peptide binding against for the sample
+			Path to a tab-separated text file of MHC alleles to check peptide binding against for the sample.
 		-s
-			Name of one of the sample directories in the isoform directory input (-i input) to run through NetMHCpan
+			Name of one of the sample directories in the isoform directory input (-i input) to run through NetMHCpan.
 		-p
-			Path to the directory where this pipeline is
+			Path to the directory where this pipeline is.
 
 ### Output:
 		../{output_directory_fastas}/mhc_i/{Sample_Name}.fasta
-			Fasta file containing the netmhcpan id # for isoform and the isoform sequence
+			Fasta file containing the netmhcpan id # for isoform and the isoform sequence.
 		../{output_directory_fastas}/mhc_i/{Sample_Name}.peptides
 			Fasta file containing the netmhcpan id # of the isoform and all possible k-mers of length 8-11 spanning the junction.
 		../{output_directory_fastas}/mhc_ii/{Sample_Name}.fasta
-			Fasta file containing the netmhcpan id # for isoform and the isoform sequence
+			Fasta file containing the netmhcpan id # for isoform and the isoform sequence.
 		../{output_directory_fastas}/mhc_ii/{Sample_Name}.peptides
 			Fasta file containing the netmhcpan id # of the isoform and all possible k-mers of length 15 spanning the junction.
 		../{output_directory_mapping_files}/{Sample_Name}.tsv
 			Tab separated file containing the same results from step 2, but with an additional NetMHCpan id # to match peptides to their corresponding isoform and junction event after running NetMHCpan.
 		../{output_directory_netmhcpan_results}/{Sample_Name}.xlsoutput
-			Tab separated output table from NetMHCPan containing binding affinity scores for every possible peptide at every provided junction for the sample
+			Tab separated output table from NetMHCPan containing binding affinity scores for every possible peptide at every provided junction for the sample.
 			
 ## 4. Parse the NetMHCpan .xls results files
 -See ./examples to see how the allele table should be formatted.
    
-	./xls_parser.sh -i output_directory_netmhcpan_results -f output_directory_fastas/mhc_i -o output_directory_parsed_affinity -a mhc_allele_table -p ../Neoantigen_Pipeline
+	./xls_parser.sh -i output_directory_netmhcpan_results -f output_directory_fastas/mhc_i -o output_directory_parsed_affinity -p ../Neoantigen_Pipeline
 
 ### Arguments:
 
 		-i
-			Path to a directory of NetMHCpan .xlsoutput results files
+			Path to a directory of NetMHCpan .xlsoutput results files.
 		-f
 			Path to a directory of Fasta files containing the isoforms. Ie) The mhc_i subdirectory in The fasta output directory from step 3 is the input directory here.
 		-o
-			Path to a directory to store newly parsed affinity files
-		-a
-			Path to a tab-separated text file of MHC alleles to check peptide binding against for the sample
+			Path to a directory to store newly parsed affinity files.
 		-p
-			Path to the directory where this pipeline is
+			Path to the directory where this pipeline is.
 
 ### Output:
 		{Sample_Name}.output:
-			Tab separated output table containing the affinity scores for each allele for the highest binding peptide per isoform
+			Tab separated output table containing the affinity scores for each allele for the highest binding peptide per isoform.
 
 ## 5. Calculate the PHBR score for each peptide, output results table, and provide a plot of ratios of event expression
    
@@ -164,29 +164,21 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 		-j
 			Path to the full junctions table generated from Step 1.
 		-a
-			Path to a directory of allele affinity scores. The output directory from step 4 is the input directory here
+			Path to a directory of allele affinity scores. The output directory from step 4 is the input directory here.
 		-m
-			Path to a directory containing sample files with mapping IDs
+			Path to a directory containing sample files with mapping IDs.
 		-o
-			Path to a directory to store the file results tables and plots
+			Path to a directory to store the file results tables and plots.
 		-p
-			Path to the directory where this pipeline is
+			Path to the directory where this pipeline is.
 
 ### Output:
-		fin_prioritization.high_express_junctions.tsv:
-			Tab separated results table of PHBR scores and corresponding peptide results for the highest binders
-		
-		fin_sorted_prioritization.high_express_junctions.tsv:
-			Tab separated results table of PHBR scores, corresponding peptide results, and the percent of samples containing the potential neoantigen/peptide. Sorted numerically by junction of interest.
-		
-		fin_lhbr_filtered_prioritization.high_express_junctions.tsv:
-			Tab separated results table filtered where the PHBR of the alternative junction of interest is less than the PHBR of the wild-type junction (Lower PHBR = Higher Binding Affinity)
-	
-		fin_exp_and_phbr_filtered_prioritization.high_express_junctions.tsv
-			Tab separated results table of filtered both by PHBR and where the expression level of the junction of interest is greater than the expression level of the wild-type junction
-		
+		fin_results.tsv:
+			Full tab separated results table of PHBR scores and corresponding peptide/isoform results for both the alternatively spliced junction event, and the corresponding wild-type where applicable. Lower PHBR values = higher binding affinity. This file contains all of the possible highest binding peptides and all of the trinity assembled isoforms per alternative splicing event.
+		fin_summarized_results.tsv:
+			Same as the above, however contains a summarized tab separated results table with only the most commonly occuring peptide and isoform across the samples for each event.
 		ase_vs_other.png:
-			Boxplot comparing overall PHBR scores between the alternatively spliced junctions of interest and the wild-type junctions
+			Boxplot comparing overall PHBR scores between the alternatively spliced junctions of interest and the wild-type junctions.
 
   ## Acknowledgements and Citations
 -xls_parse.py contains modified code from Rachel Marty's NetMHCpan wrapper PyPresent (https://github.com/Rachelmarty20/pypresent)
