@@ -29,6 +29,7 @@ junc_df = junc_df.astype({"start":"int","end":"int"})
 junc_df['start_intron'] = junc_df['start'] + 1
 junc_df['end_intron'] = junc_df['end'] - 1
 junc_df = junc_df.astype({"start":"str","end":"str", "start_intron":"str", "end_intron":"str"})
+print(junc_df.shape)
 junc_df.head(10)
 
 # get tumor bams to do
@@ -60,9 +61,6 @@ for patient in patient_list:
     path = '{}/{}SJ.out.tab'.format(args.STAR_directory, patient)
     star_df = pd.read_csv(path, sep='\t', header=None, low_memory = False)
     star_df.columns = star_cols
-    star_df = star_df[star_df["chr"].str.contains("JH") == False]
-    star_df = star_df[star_df["chr"].str.contains("GL") == False]
-    star_df = star_df[star_df["chr"].str.contains("MU") == False]
     #star_df['chr'] = 'chr' + star_df['chr']
     
     # identify shared start/end

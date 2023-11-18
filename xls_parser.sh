@@ -13,24 +13,22 @@ Arguments:
 -f      Directory where peptide fasta files are stored per sample
 -o      Output Directory to store parsed affinity results
 -p	Pipeline Directory
--a	Allele Table
 EOF
   exit
 }
 
-while getopts "i:f:o:p:a:h" flag ; do
+while getopts "i:f:o:p:h" flag ; do
 
         case "${flag}" in
                 i) netmhcpan_results_directory=${OPTARG};;
                 f) peptide_directory=${OPTARG};;
                 o) output_directory=${OPTARG};;
 		p) pipeline_directory=${OPTARG};;
-                a) allele_table=${OPTARG};;
                 h) usage;;
         esac
 done
 
-if [ -z $netmhcpan_results_directory ] || [ -z $peptide_directory ] || [ -z $output_directory ] || [ -z $pipeline_directory ] || [ -z $allele_table ]; then
+if [ -z $netmhcpan_results_directory ] || [ -z $peptide_directory ] || [ -z $output_directory ] || [ -z $pipeline_directory ]; then
         echo "Missing required arguments"
         usage
         exit 1
@@ -47,5 +45,4 @@ echo "Running"
 python $pipeline_directory/supplemental/xls_parse.py \
 --netmhcpan_results_directory $netmhcpan_results_directory \
 --peptide_directory $peptide_directory \
---output_directory $output_directory \
---allele_table $allele_table
+--output_directory $output_directory

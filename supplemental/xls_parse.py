@@ -14,15 +14,11 @@ args_path = parser.add_argument_group("Inputs:")
 args_path.add_argument('-i', '--netmhcpan_results_directory', type=str, required=True, help='Directory containing xls files with affinity results for all samples from netmhcpan')
 args_path.add_argument('-f', '--peptide_directory', type=str, required=True, help='Directory where peptide fasta files are stored from previous step')
 args_path.add_argument('-o', '--output_directory', type = str, required=True, help='Location to store phbr score results')
-args_path.add_argument('-a', '--allele_table', type=str, required=True, help='Table of alleles to check peptide binding affinity against for each sample')
 
 args = parser.parse_args()
 
-# Load affinity table for PyPresent
-allele_table = pd.read_csv(args.allele_table, sep = '\t', index_col = 0)
-
 # Parse netmhcpan output
-def get_pypresent_output(peptide_filepath, xls_file_list, output_path, patient, allele_table, affinity_col_base='Rank', output_pep_path=None, verbose=False):
+def get_pypresent_output(peptide_filepath, xls_file_list, output_path, affinity_col_base='Rank', output_pep_path=None, verbose=False):
     '''Parses xls output from netMHCpan, saves allele-specific best rank scores
     Args:
         peptide_filepath (str): path to previously saved mutated peptides
@@ -113,12 +109,25 @@ def get_pypresent_output(peptide_filepath, xls_file_list, output_path, patient, 
     allele_br_pep_output_df = allele_br_pep_output_df.add_suffix('_peptide')
     
     allele_br_output_df = allele_br_output_df.join(allele_br_pep_output_df)
-    col1_val = allele_table.loc[patient][0]
-    col2_val = allele_table.loc[patient][1]
-    col1_name = col1_val + '_peptide'
-    col2_name = col2_val + '_peptide'
-    allele_br_output_df['peptide'] = np.where(allele_br_output_df[col1_val] <= allele_br_output_df[col2_val], allele_br_output_df[col1_name], allele_br_output_df[col2_name])
-    allele_br_output_df = allele_br_output_df.drop([col1_name, col2_name], axis = 1)
+
+    only_scores_df = allele_br_output_df.loc[:,~allele_br_output_df.columns.str.endswith('_peptide')]
+    allele_column_names = only_scores_df.columns.to_list()
+    only_scores_df['lowest_phbr'] = only_scores_df[allele_column_names].min(axis=1)
+    only_scores_df['lowest_allele'] = only_scores_df[allele_column_names].idxmin(axis=1)
+    
+    allele_br_output_df['lowest_allele'] = only_scores_df['lowest_allele']
+    
+    allele_br_output_df['lowest_allele'] = allele_br_output_df['lowest_allele'].astype(str) + '_peptide'
+    
+    lowest_peptide_string = []
+    for index, row in allele_br_output_df.iterrows():
+        x = row['lowest_allele']
+        lowest_peptide_string.append(row[x])
+    allele_br_output_df['peptide'] = lowest_peptide_string
+    
+    allele_br_output_df = allele_br_output_df[allele_br_output_df.columns.drop(list(allele_br_output_df.filter(regex='_peptide')))]
+    allele_br_output_df = allele_br_output_df.drop(['lowest_allele'], axis = 1)    
+
     allele_br_output_df.to_csv(output_path, sep='\t')
     if output_pep_path:
         allele_br_pep_output_df.to_csv(output_pep_path, sep='\t')
@@ -135,5 +144,5 @@ for i, patient in enumerate(patient_list):
     peptide_path = os.path.join(peptide_output_dir, '{}.peptides'.format(patient))
     xls_path_list = ','.join([os.path.join(xls_output_dir, x) for x in os.listdir(xls_output_dir) if x.split('.')[0] == patient])
 
-    get_pypresent_output(peptide_path, xls_path_list, output_path, patient, allele_table, affinity_col_base='EL_Rank')
+    get_pypresent_output(peptide_path, xls_path_list, output_path, affinity_col_base='EL_Rank')
 

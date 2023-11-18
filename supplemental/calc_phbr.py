@@ -7,6 +7,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 from ast import literal_eval
 import re
+import statistics
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import seaborn as sns
@@ -25,11 +26,15 @@ args_path.add_argument('-j', '--junctions_table', type=str, required=True, help=
 args_path.add_argument('-a', '--affinity_scores', type=str, required=True, help='Directory with allele affinity scores. Ie) Output files from xls_parser.sh')
 args_path.add_argument('-m', '--mapping_directory', type=str, required=True, help='Directory containing patient files with the mapping ID number to netmhcpan')
 args_path.add_argument('-o', '--output_directory', type=str, required=True, help='Location to store phbr score results and plots')
+args_path.add_argument('-t', '--paired_table', type=str, required=True, help='Location of the ASE junctions table with their corresponding paired WT junctions')
 
 args = parser.parse_args()
 
 # Load junctions we generated neopeptides for
 junc_df = pd.read_csv('{}'.format(args.junctions_table), sep='\t')
+samples_only_df = junc_df.drop_duplicates(subset = 'patient')
+tums = samples_only_df[samples_only_df['junction_category'] == 'ASE_junc_of_interest']
+norms = samples_only_df[samples_only_df['junction_category'] == 'other']
 
 # Gather NETMHCpan parsed output affinity files for each patient
 patient_list = junc_df['patient'].unique()
@@ -166,125 +171,137 @@ def plot_boxplots(df, x, y=None, y_list=None, order=None, ylim_dict=None, figsiz
 plot_boxplots(x='junction_category', y='PHBR_scores', df=total_df.dropna(), figsize=(3,3), ylim_dict={'PHBR_scores':(-1,21)}, 
               order=['other','ASE_junc_of_interest'], savepath='{}/ase_vs_other.png'.format(args.output_directory))
 
-# Prioritization
-same_start =  total_df[total_df.duplicated(['chr_intron_start','patient'], keep=False)]
-same_start = same_start.sort_values(by=['chr_intron_start','junction_category'], ascending=True)
+#Split the combined dataframe of ASE and WT into separate frames
+ase_frame = total_df[total_df['junction_category'] == 'ASE_junc_of_interest']
+ase_frame = ase_frame.drop(columns = ['junction_category'], axis = 1)
+wt_frame = total_df[total_df['junction_category'] == 'other']
+wt_frame = wt_frame.drop(columns = ['junction_category'], axis = 1)
 
-same_start_total_df = pd.DataFrame()
+all_ases = ase_frame.groupby('junction')
+all_wts = wt_frame.groupby('junction')
 
-for patient in same_start['patient'].unique():
-    
-    pat_df = same_start[same_start['patient']==patient]
-    pat_junc_df = pat_df.pivot(index=['chr_intron_start'], columns=['junction_category'], values='junction')
-    pat_exp_df = pat_df.pivot_table(index=['chr_intron_start'], columns=['junction_category'], values='num_uniq_reads_at_junc')
-    pat_pep_df = pat_df.pivot_table(index=['chr_intron_start'], columns=['junction_category'], values='peptide', aggfunc = np.sum)
-    pat_iso_df = pat_df.pivot_table(index=['chr_intron_start'], columns=['junction_category'], values='isoform', aggfunc = np.sum)
-    pat_pos_df = pat_df.pivot_table(index=['chr_intron_start'], columns=['junction_category'], values='junc_aa_pos', aggfunc = np.sum)
-    pat_df = pat_df.pivot_table(index=['chr_intron_start'], columns=['junction_category'], values='PHBR_scores')
+#Group both dataframes so there is just one junction per row and each cell contains a list of all values found in each patient
+final_ase_df = pd.DataFrame(columns = ['ASE_PHBR_Score', 'ASE_peptide', 'ASE_junction', 'ASE_#Reads', 'Tumor_samples', '%samples_with_ASE_junction', 'ASE_isoforms', 'ASE_junction_index'])
+final_wt_df = pd.DataFrame(columns = ['WT_PHBR_Score', 'WT_peptide', 'WT_junction', 'WT_#Reads', 'Normal_samples', '%samples_with_WT_junction', 'WT_isoforms', 'WT_junction_index'])
 
-    pat_exp_df = pat_exp_df.rename(columns={'ASE_junc_of_interest': 'ASE_num_uniq', 'other': 'WT_num_uniq'})
-    pat_pep_df = pat_pep_df.rename(columns={'ASE_junc_of_interest': 'ASE_peptide', 'other': 'WT_peptide'})
-    pat_iso_df = pat_iso_df.rename(columns={'ASE_junc_of_interest': 'ASE_Isoform', 'other': 'WT_Isoform'})
-    pat_pos_df = pat_pos_df.rename(columns={'ASE_junc_of_interest': 'ASE_AA_Junc_Position', 'other': 'WT_AA_Junc_Position'})
-    pat_df = pat_df.rename(columns={'ASE_junc_of_interest': 'ASE_PHBR', 'other': 'WT_PHBR'})
-    
-    pat_df['ase_wt_ratio'] = pat_df['ASE_PHBR'] / pat_df['WT_PHBR']
-    pat_exp_df['ase_wt_exp_ratio'] = pat_exp_df['ASE_num_uniq'] / pat_exp_df['WT_num_uniq']
-    pat_df = pat_df.join(pat_junc_df[['ASE_junc_of_interest']]).join(pat_junc_df[['other']]).join(pat_exp_df).join(pat_pep_df).join(pat_iso_df).join(pat_pos_df)
-    pat_df['patient'] = patient
-    pat_df = pat_df.rename(columns={'other': 'WT_junc'})
-    same_start_total_df = same_start_total_df.append(pat_df)
+row_index = 0
+for name, group in all_ases:
+    scores = group['PHBR_scores'].tolist()
+    peptides = group['peptide'].tolist()
+    junctions = name
+    reads = group['num_uniq_reads_at_junc'].to_list()
+    samples = group['patient'].to_list()
+    all_isos = group['isoform'].to_list()
+    perc = (len(samples) / len(tums)) * 100
+    all_positions = group['junc_aa_pos'].to_list()
+    final_ase_df.loc[row_index] = [scores, peptides, junctions, reads, samples, perc, all_isos, all_positions]
+    row_index = row_index + 1
 
-same_start_total_df['category'] = 'shared_start'
+row_index = 0
+for name, group in all_wts:
+    scores = group['PHBR_scores'].tolist()
+    peptides = group['peptide'].tolist()
+    junctions = name
+    reads = group['num_uniq_reads_at_junc'].to_list()
+    samples = group['patient'].to_list()
+    all_isos = group['isoform'].to_list()
+    perc = (len(samples) / len(norms)) * 100
+    all_positions = group['junc_aa_pos'].to_list()
+    final_wt_df.loc[row_index] = [scores, peptides, junctions, reads, samples, perc, all_isos, all_positions]
+    row_index = row_index + 1
 
-#plt.figure(figsize=(20,20))
-#sns.barplot(x='ASE_junc_of_interest', y='ase_wt_ratio', data=same_start_total_df)
-#plt.xticks(rotation=45, ha='right')
-#plt.savefig('{}/same_start_ratios.png'.format(args.output_directory))
-#plt.close()
+final_ase_df = final_ase_df.set_index('ASE_junction', drop = False)
+final_wt_df = final_wt_df.set_index('WT_junction', drop = False)
 
-same_end = total_df[total_df.duplicated(['chr_intron_end','patient'], keep=False)]
-same_end_total_df = pd.DataFrame()
+#Load Pairing Table
+pairing_table = pd.read_csv('{}'.format(args.paired_table), sep = '\t')
+pairing_table['wt'] = pairing_table['wt'].fillna(0)
 
-for patient in same_end['patient'].unique():
-    pat_df = same_end[same_end['patient']==patient]
-    pat_junc_df = pat_df.pivot(index=['chr_intron_end'], columns=['junction_category'], values='junction')
-    pat_exp_df = pat_df.pivot_table(index=['chr_intron_end'], columns=['junction_category'], values='num_uniq_reads_at_junc')
-    pat_pep_df = pat_df.pivot_table(index=['chr_intron_end'], columns=['junction_category'], values='peptide', aggfunc = np.sum)
-    pat_iso_df = pat_df.pivot_table(index=['chr_intron_end'], columns=['junction_category'], values='isoform', aggfunc = np.sum)
-    pat_pos_df = pat_df.pivot_table(index=['chr_intron_end'], columns=['junction_category'], values='junc_aa_pos', aggfunc = np.sum)
-    pat_df = pat_df.pivot_table(index=['chr_intron_end'], columns=['junction_category'], values='PHBR_scores')
+#For every row in the pairing table, merge the corresponding ase row with the corresponding wt row
+my_final_df = pd.DataFrame(columns = ['ASE_junction', 'ASE_peptide', 'ASE_PHBR_Score', 'ASE_#Reads', 'Tumor_samples', '%samples_with_ASE_junction', 'ASE_isoforms', 'ASE_junction_indices',
+                                      'WT_junction', 'WT_peptide', 'WT_PHBR_Score', 'WT_#Reads', 'Normal_samples', '%samples_with_WT_junction', 'WT_isoforms', 'WT_junction_indices'])
 
-    pat_df = pat_df.rename(columns={'ASE_junc_of_interest': 'ASE_PHBR', 'other': 'WT_PHBR'})    
-    pat_pep_df = pat_pep_df.rename(columns={'ASE_junc_of_interest': 'ASE_peptide', 'other': 'WT_peptide'})
-    pat_exp_df = pat_exp_df.rename(columns={'ASE_junc_of_interest': 'ASE_num_uniq', 'other': 'WT_num_uniq'})
-    pat_iso_df = pat_iso_df.rename(columns={'ASE_junc_of_interest': 'ASE_Isoform', 'other': 'WT_Isoform'})
-    pat_pos_df = pat_pos_df.rename(columns={'ASE_junc_of_interest': 'ASE_AA_Junc_Position', 'other': 'WT_AA_Junc_Position'})
+index_val = 0
+for index, row in pairing_table.iterrows():
+    if row['ase'] in final_ase_df.index:
+        if row['wt'] == 0 or row['wt'] not in final_wt_df.index:
+            x = final_ase_df.loc[row['ase']]
+            val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, val12, val13, val14, val15, val16 = x['ASE_junction'], x['ASE_peptide'], x['ASE_PHBR_Score'], x['ASE_#Reads'], x['Tumor_samples'], x['%samples_with_ASE_junction'], x['ASE_isoforms'], x['ASE_junction_index'], 'nan', 'nan', 'nan', 'nan', 'nan', 'nan', 'nan', 'nan'
+            my_final_df.loc[index_val] = val1,val2,val3,val4,val5,val6,val7,val8,val9,val10,val11,val12,val13,val14,val15,val16
+            index_val = index_val + 1
+        else:
+            x = final_ase_df.loc[row['ase']]
+            y = final_wt_df.loc[row['wt']]
+            val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, val12, val13, val14, val15, val16 = x['ASE_junction'], x['ASE_peptide'], x['ASE_PHBR_Score'], x['ASE_#Reads'], x['Tumor_samples'], x['%samples_with_ASE_junction'], x['ASE_isoforms'], x['ASE_junction_index'], y['WT_junction'], y['WT_peptide'], y['WT_PHBR_Score'], y['WT_#Reads'], y['Normal_samples'], y['%samples_with_WT_junction'], y['WT_isoforms'], y['WT_junction_index']
+            my_final_df.loc[index_val] = val1,val2,val3,val4,val5,val6,val7,val8,val9,val10,val11,val12,val13,val14,val15,val16
+            index_val = index_val + 1
+    else:
+        continue
 
+#Same as above, but make a summarized output file
+summary_ase_df = pd.DataFrame(columns = ['ASE_PHBR_Score', 'ASE_peptide', 'ASE_junction', 'ASE_Median#Reads', 'Tumor_samples', '%samples_with_ASE_junction', 'ASE_isoforms'])
+summary_wt_df = pd.DataFrame(columns = ['WT_PHBR_Score', 'WT_peptide', 'WT_junction', 'WT_Median#Reads', 'Normal_samples', '%samples_with_WT_junction', 'WT_isoforms'])
 
-    pat_df['ase_wt_ratio'] = pat_df['ASE_PHBR'] / pat_df['WT_PHBR']
-    pat_exp_df['ase_wt_exp_ratio'] = pat_exp_df['ASE_num_uniq'] / pat_exp_df['WT_num_uniq'] 
+row_index = 0
+for name, group in all_ases:
+    scores = list(set(group['PHBR_scores'].tolist()))
+    peptides = list(set(group['peptide'].tolist()))
+    junctions = name
+    reads = group['num_uniq_reads_at_junc'].to_list()
+    median_r = statistics.median(reads)
+    samples = group['patient'].to_list()
+    isos = group['isoform']
+    clean_isos = []
+    for i in isos:
+        for j in i:
+            clean_isos.append(j)
+    isos = list(set(clean_isos))
+    perc = (len(samples) / len(tums)) * 100
+    summary_ase_df.loc[row_index] = [scores, peptides, junctions, median_r, samples, perc, isos]
+    row_index = row_index + 1
 
-    pat_df = pat_df.join(pat_junc_df[['ASE_junc_of_interest']]).join(pat_junc_df[['other']]).join(pat_exp_df).join(pat_pep_df).join(pat_iso_df).join(pat_pos_df)
-    pat_df['patient'] = patient
-    pat_df = pat_df.rename(columns={'other': 'WT_junc'})
-    same_end_total_df = same_end_total_df.append(pat_df)
+for name, group in all_wts:
+    scores = list(set(group['PHBR_scores'].tolist()))
+    peptides = list(set(group['peptide'].tolist()))
+    junctions = name
+    reads = group['num_uniq_reads_at_junc'].to_list()
+    median_r = statistics.median(reads)            
+    samples = group['patient'].to_list()
+    isos = group['isoform']
+    clean_isos = []
+    for i in isos:
+        for j in i:
+            clean_isos.append(j)
+    isos = list(set(clean_isos))
+    perc = (len(samples) / len(tums)) * 100
+    all_positions = group['junc_aa_pos'].to_list()
+    summary_wt_df.loc[row_index] = [scores, peptides, junctions, median_r, samples, perc, isos]
+    row_index = row_index + 1
+summary_ase_df = summary_ase_df.set_index('ASE_junction', drop = False)
+summary_wt_df = summary_wt_df.set_index('WT_junction', drop = False)
 
-same_end_total_df['category'] = 'shared_end'
+#Same as above, but for the summarized table
+my_summarized_df = pd.DataFrame(columns = ['ASE_junction', 'ASE_peptide', 'ASE_PHBR_Score', 'ASE_Median#Reads', 'Tumor_samples', '%samples_with_ASE_junction', 'ASE_isoforms',
+                                      'WT_junction', 'WT_peptide', 'WT_PHBR_Score', 'WT_Median#Reads', 'Normal_samples', '%samples_with_WT_junction', 'WT_isoforms'])
 
-#plt.figure(figsize=(20,20))
-#sns.barplot(x='ASE_junc_of_interest', y='ase_wt_ratio', data=same_end_total_df)
-#plt.xticks(rotation=45, ha='right')
-#plt.savefig('{}/same_end_ratios.png'.format(args.output_directory))
-#plt.close()
+index_val = 0
+for index, row in pairing_table.iterrows():
+    if row['ase'] in summary_ase_df.index:
+        if row['wt'] == 0 or row['wt'] not in summary_wt_df.index:
+            x = summary_ase_df.loc[row['ase']]
+            val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, val12, val13, val14 = x['ASE_junction'], x['ASE_peptide'], x['ASE_PHBR_Score'], x['ASE_Median#Reads'], x['Tumor_samples'], x['%samples_with_ASE_junction'], x['ASE_isoforms'], 'nan', 'nan', 'nan', 'nan', 'nan', 'nan', 'nan'
+            my_summarized_df.loc[index_val] = val1,val2,val3,val4,val5,val6,val7,val8,val9,val10,val11,val12,val13,val14
+            index_val = index_val + 1
+        else:
+            x = summary_ase_df.loc[row['ase']]
+            y = summary_wt_df.loc[row['wt']]
+            val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, val12, val13, val14 = x['ASE_junction'], x['ASE_peptide'], x['ASE_PHBR_Score'], x['ASE_Median#Reads'], x['Tumor_samples'], x['%samples_with_ASE_junction'], x['ASE_isoforms'], y['WT_junction'], y['WT_peptide'], y['WT_PHBR_Score'], y['WT_Median#Reads'], y['Normal_samples'], y['%samples_with_WT_junction'], y['WT_isoforms']
+            my_summarized_df.loc[index_val] = val1,val2,val3,val4,val5,val6,val7,val8,val9,val10,val11,val12,val13,val14
+            index_val = index_val + 1
+    else:
+        continue
 
-total_ratio_df = same_start_total_df.append(same_end_total_df)
-total_ratio_df = total_ratio_df.sort_values(by=['ase_wt_ratio','ase_wt_exp_ratio', 'ASE_PHBR', 'WT_PHBR'], ascending=[True,False,True,False])
-
-savepath = '{}/fin_prioritization.high_express_junctions.tsv'.format(args.output_directory)
-total_ratio_df.to_csv(savepath, sep='\t', index=False)
-
-#x, y = 'ase_wt_ratio','ase_wt_exp_ratio'
-#plt.figure(figsize=(10,10))
-#sns.scatterplot(x=x, y=y, data=total_ratio_df)
-
-#for _, row in total_ratio_df.iterrows():
-#    if row[x]<0.2 and row[y]>2:
-#        plt.text(row[x], row[y], '  '+row['ASE_junc_of_interest'])
-#plt.yscale('log')
-#plt.xscale('log')        
-#plt.savefig('{}/scatter_ratios.png'.format(args.output_directory))
-#plt.close()
-
-#total_ratio_df = pd.read_csv('{}/fin_prioritization.high_express_junctions.tsv'.format(args.output_directory), sep = '\t')
-#plt.figure(figsize=(20,20))
-#sns.barplot(data = total_ratio_df, x='ASE_junc_of_interest', y='ase_wt_ratio', hue = 'category')
-#plt.xticks(rotation=45, ha='right')
-#plt.savefig('{}/start_and_end_ratios.png'.format(args.output_directory))
-#plt.close()
-
-# Get event occurance and sort
-my_file = pd.read_csv('{}/fin_prioritization.high_express_junctions.tsv'.format(args.output_directory), sep = '\t')
-my_file['%patients_with_ASEpeptide']=my_file.groupby(['ASE_peptide'])['ASE_peptide'].transform('count')
-my_file['%patients_with_ASEpeptide']=(my_file['%patients_with_ASEpeptide'] / len(patient_list))*100
-my_file = my_file.sort_values('ASE_junc_of_interest')
-my_file.to_csv('{}/fin_sorted_prioritization.high_express_junctions.tsv'.format(args.output_directory), sep = '\t', index = False)
-
-# Filter Priority File to show junctions where ASE PHBR < WT
-my_file = pd.read_csv('{}/fin_prioritization.high_express_junctions.tsv'.format(args.output_directory), sep = '\t')
-#Filter just by PHBR
-my_file = my_file.loc[my_file['ase_wt_ratio'] < 1]
-my_file['%patients_with_ASEpeptide']=my_file.groupby(['ASE_peptide'])['ASE_peptide'].transform('count')
-my_file['%patients_with_ASEpeptide']=(my_file['%patients_with_ASEpeptide'] / len(patient_list))*100
-my_file = my_file.sort_values('ASE_junc_of_interest')
-my_file.to_csv('{}/fin_phbr_filtered_prioritization.high_express_junctions.tsv'.format(args.output_directory), sep='\t', index=False)
-
-#Filter by PHBR and ASE Expression > WT if necessary
-my_file = pd.read_csv('{}/fin_prioritization.high_express_junctions.tsv'.format(args.output_directory), sep = '\t')
-my_file = my_file.loc[my_file['ase_wt_ratio'] < 1]
-my_file = my_file.loc[my_file['ase_wt_exp_ratio'] > 1]
-my_file['%patients_with_ASEpeptide']=my_file.groupby(['ASE_peptide'])['ASE_peptide'].transform('count')
-my_file['%patients_with_ASEpeptide']=(my_file['%patients_with_ASEpeptide'] / len(patient_list))*100
-my_file = my_file.sort_values('ASE_junc_of_interest')
-my_file.to_csv('{}/fin_exp_and_phbr_filtered_prioritization.high_express_junctions.tsv'.format(args.output_directory), sep='\t', index=False)
+#Save Tables
+my_final_df.to_csv('{}/fin_results.tsv'.format(args.output_directory), sep='\t', index=False)
+my_summarized_df.to_csv('{}/fin_summarized_results.tsv'.format(args.output_directory), sep = '\t', index=False)
 

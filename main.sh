@@ -16,18 +16,19 @@ to creating a custom database for searching in mass-spec proteomics data.
 
 Available options:
 
--b    tumor RNA bam aligned to the genome [REQUIRED]
+-b    RNA bam aligned to the genome [REQUIRED]
 -j    junctions of interest file [REQUIRED]
 -g    path to gtf file [REQUIRED]
 -f    path to cds fasta file [REQUIRED]
 -t    path to trinity singularity image [REQUIRED]
 -o    output directory [REQUIRED]
 -p    pipeline directory [REQUIRED]
+-m    data is from a mouse genome [OPTIONAL]
 EOF
   exit
 }
 
-while getopts "b:j:g:f:t:p:o:h" flag ; do
+while getopts "b:j:g:f:t:p:o:mh" flag ; do
 
 	case "${flag}" in
 		b) tumor_rna_bam=${OPTARG};;
@@ -37,6 +38,7 @@ while getopts "b:j:g:f:t:p:o:h" flag ; do
 		t) trinity_image=${OPTARG};;
 		p) pipeline_dir=${OPTARG};;
 		o) output_dir=${OPTARG};;
+		m) mouse='This_is_a_Mouse_Genome';;
 		h) usage;;
 	esac
 done
@@ -103,7 +105,6 @@ if [ ! -f $tumor_rna_bam.bai ]; then
 	exit 1
 fi
 
-
 echo "
 ############################################
 ##### 1. Create script to run pipeline #####
@@ -133,5 +134,12 @@ echo "
 ##### 3. Generate neopeptides #####
 ###################################
 "
+if [ -z $mouse ]; then
+	python $pipeline_dir/alt_splice_neoantigens/scripts/human_generate_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file
+else
+	python $pipeline_dir/alt_splice_neoantigens/scripts/mouse_generate_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file
+fi
 
-python $pipeline_dir/alt_splice_neoantigens/scripts/generate_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file
+
+
+
