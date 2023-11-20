@@ -157,7 +157,7 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 
 ## 5. Calculate the PHBR score for each peptide, output results table, and provide a plot of ratios of event expression
    
-	./get_phbr.sh -j Filename_Prefix_junctionsOfInterest_plusWT.tsv -a output_directory_parsed_affinity -m output_directory_mapping_files -o output_directory_final_results -p ../Neoantigen_Pipeline
+	./get_phbr.sh -j Filename_Prefix_junctionsOfInterest_plusWT.tsv -a output_directory_parsed_affinity -m output_directory_mapping_files -t Filename_Prefix__ase_wt_pairs.tsv -o output_directory_final_results -p ../Neoantigen_Pipeline
 
 ### Arguments:
 		
@@ -167,6 +167,8 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 			Path to a directory of allele affinity scores. The output directory from step 4 is the input directory here.
 		-m
 			Path to a directory containing sample files with mapping IDs.
+   		-t
+     		Path to a table containing the junctions of interest and their corresponding wild-type junction.
 		-o
 			Path to a directory to store the file results tables and plots.
 		-p
