@@ -16,6 +16,7 @@ This tool aims to identify potential neoantigens produced as a result of aberran
  * Python 3 (Tested on Version 3.6.8) with the following modules installed:
 	* pandas (Tested on Version 1.1.5)
 	* pysam
+   	* argparse
 	* biopython
 	* numpy
 	* matplotlib
