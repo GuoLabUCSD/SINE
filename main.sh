@@ -20,7 +20,7 @@ Available options:
 -j    junctions of interest file [REQUIRED]
 -g    path to gtf file [REQUIRED]
 -f    path to cds fasta file [REQUIRED]
--t    path to trinity singularity image [REQUIRED]
+-t    path to trinity singularity/apptainer image [REQUIRED]
 -o    output directory [REQUIRED]
 -p    pipeline directory [REQUIRED]
 -m    data is from a mouse genome [OPTIONAL]
