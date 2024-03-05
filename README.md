@@ -81,7 +81,7 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 		-f
 			Path to CDS fasta file
 		-t
-			Path to Trinity Singularity Image
+			Path to Trinity Singularity/Apptainer Image
 		-o
 			Path to ouput directory where results should be stored
 		-p
