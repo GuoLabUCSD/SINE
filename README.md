@@ -22,7 +22,7 @@ This tool aims to identify potential neoantigens produced as a result of aberran
 	* matplotlib
 	* seaborn
  * SAMtools
- * Singularity
+ * Singularity/Apptainer
  * Trinity 
 	* Available at: https://github.com/trinityrnaseq/trinityrnaseq/wiki/Trinity-in-Docker#running-trinity-using-singularity
 
