@@ -1,0 +1,6 @@
+	H-2K	H-2D
+tumor1	H-2-Kb	H-2-Db
+tumor2	H-2-Kb	H-2-Db
+tumor3	H-2-Kb	H-2-Db
+tumor4	H-2-Kb	H-2-Db
+tumor5	H-2-Kb	H-2-Db
