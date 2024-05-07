@@ -23,12 +23,13 @@ Available options:
 -t    path to trinity singularity/apptainer image [REQUIRED]
 -o    output directory [REQUIRED]
 -p    pipeline directory [REQUIRED]
+-s    sample_name [REQUIRED]
 -m    data is from a mouse genome [OPTIONAL]
 EOF
   exit
 }
 
-while getopts "b:j:g:f:t:p:o:mh" flag ; do
+while getopts "b:j:g:f:t:o:p:s:mh" flag ; do
 
 	case "${flag}" in
 		b) tumor_rna_bam=${OPTARG};;
@@ -38,13 +39,14 @@ while getopts "b:j:g:f:t:p:o:mh" flag ; do
 		t) trinity_image=${OPTARG};;
 		p) pipeline_dir=${OPTARG};;
 		o) output_dir=${OPTARG};;
+		s) sample_name=${OPTARG};;
 		m) mouse='This_is_a_Mouse_Genome';;
 		h) usage;;
 	esac
 done
 
 # check required args are given
-if [ -z $tumor_rna_bam ] || [ -z $junction_file ] || [ -z $output_dir ] || [ -z $pipeline_dir ] || [ -z $gtf_file ] || [ -z $trinity_image ] || [ -z $cds_fasta_file ]; then
+if [ -z $tumor_rna_bam ] || [ -z $junction_file ] || [ -z $output_dir ] || [ -z $pipeline_dir ] || [ -z $gtf_file ] || [ -z $trinity_image ] || [ -z $cds_fasta_file ] || [ -z $sample_name ]; then
 	echo "the default pipeline requires a tumor RNAseq bam pair, a junctions file, a designated output directory, a gtf file, the CDS fasta file, the trinity image, and the pipeline directory. Exiting..."
 	usage
 	exit 1
@@ -135,9 +137,9 @@ echo "
 ###################################
 "
 if [ -z $mouse ]; then
-	python $pipeline_dir/alt_splice_neoantigens/scripts/human_generate_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file
+	python $pipeline_dir/alt_splice_neoantigens/scripts/human_generate_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file -s $sample_name -b $tumor_rna_bam
 else
-	python $pipeline_dir/alt_splice_neoantigens/scripts/mouse_generate_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file
+	python $pipeline_dir/alt_splice_neoantigens/scripts/mouse_generate_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file -s $sample_name -b $tumor_rna_bam
 fi
 
 
