@@ -1,4 +1,4 @@
-# Neoantigen_Pipeline:
+# DINA:
 This tool aims to identify potential neoantigens produced as a result of aberrant alternative splicing in tumor tissue and calculate their PHBR binding affinity score through the use of Trinity, netMHCpan, user-provided junctions of interest, and sample BAM files.
 
 
