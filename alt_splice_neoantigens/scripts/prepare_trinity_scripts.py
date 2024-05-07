@@ -34,19 +34,28 @@ def prepare_cmd(f, junction):
     f.write(f'cd {args.work_dir}/{junction}\n')
 
     # first subset to reads spanning the region designated by the junction of interest
-    f.write(f'samtools view -b {args.bam_filepath} {junction} > {junction}.trinity_in_prefilter.bam\n')
-    
+    f.write(f'samtools view --fetch-pairs -b {args.bam_filepath} {junction} > {junction}.trinity_in_prefilter.bam\n')
+   
+    # index the new bam file
+    f.write(f'samtools index {junction}.trinity_in_prefilter.bam\n')
+ 
     # separate out reads with junctions together, just 5', or just 3'
     f.write(f'python {args.pipeline_dir}/scripts/subset_to_junction_reads.py --input_bam_path {junction}.trinity_in_prefilter.bam --output_bam_prefix {junction}.trinity_in --junction {junction}\n')
     
+    # sort reads by name for bedtools
+    f.write(f'samtools sort -n {junction}.trinity_in.ase.bam > {junction}.trinity_in_sorted.ase.bam\n')
+
     # convert to fastq
-    f.write(f'bedtools bamtofastq -i {junction}.trinity_in.ase.bam -fq {junction}.trinity_in.ase.fq\n')
+    #f.write(f'bedtools bamtofastq -i {junction}.trinity_in.ase.bam -fq {junction}.trinity_in.ase.fq\n')
+    f.write(f'bedtools bamtofastq -i {junction}.trinity_in_sorted.ase.bam -fq {junction}.trinity_in.ase.fq -fq2 {junction}.trinity_in2.ase.fq\n')
     # f.write(f'bedtools bamtofastq -i {junction}.trinity_in.wildtype.bam -fq {junction}.trinity_in.wildtype.fq\n\n')
 
 
     # only run trinity for bams with reads inside
-    f.write(f'if [ -s {junction}.trinity_in.ase.bam ]; then\n')
-    f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --single {junction}.trinity_in.ase.fq --max_memory 10G --output trinity_out_{junction}_ase --min_contig_length 50 > /dev/null\n')
+    #f.write(f'if [ -s {junction}.trinity_in.ase.bam ]; then\n')
+    #f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --single {junction}.trinity_in.ase.fq --max_memory 10G --output trinity_out_{junction}_ase --min_contig_length 50 > /dev/null\n')
+    f.write(f'if [ -s {junction}.trinity_in_sorted.ase.bam ]; then\n')
+    f.write(f'\tapptainer exec -e {args.trinity_sif} Trinity --seqType fq --left {junction}.trinity_in.ase.fq --right {junction}.trinity_in2.ase.fq --SS_lib_type RF --max_memory 10G --output trinity_out_{junction}_ase --min_contig_length 50 > /dev/null\n')
     f.write('fi\n')
     
 

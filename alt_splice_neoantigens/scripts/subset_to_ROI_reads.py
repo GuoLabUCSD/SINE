@@ -12,14 +12,14 @@ def nan_index(l, value):
             return i
     return -1
     
-def keep_junction_reads_only(bampath, output_prefix, junction):
+def keep_insertion_reads_only(bampath, output_prefix, insertion):
     '''
     bampath       : path to original bam
     output_prefix : prefix to save the stratified bams to. e.g. <output_dir>/prefix
-    junction      : string following the format: chr1:12344444-12355555     
+    insertion      : string following the format: chr1:12344444-12355555     
     '''
-    junction = junction.split(':')[1]
-    start, end = junction.split('-')
+    insertion = insertion.split(':')[1]
+    start, end = insertion.split('-')
     start = int(start)-1      # zero based
     end = int(end)-1          # zero based
     used_mates = []
@@ -37,14 +37,13 @@ def keep_junction_reads_only(bampath, output_prefix, junction):
         if read_header in used_mates:
             continue
 
-        if start in read.positions and end in read.positions:
+        if start in read.positions or end in read.positions:
             
-            junc_read_start = nan_index(read.get_reference_positions(full_length=True), start)
-            junc_read_end = nan_index(read.get_reference_positions(full_length=True), end)
+            insertion_read_start = nan_index(read.get_reference_positions(full_length=True), start)
+            insertion_read_end = nan_index(read.get_reference_positions(full_length=True), end)
             
-            # check if read spans AS junction
             # if read mate is unmapped, skip to the next read
-            if junc_read_start != -1 and junc_read_end != -1 and junc_read_start+1 == junc_read_end:
+            if insertion_read_start != -1 or insertion_read_end != -1:
                 try:
                     read_mate = input_bam.mate(read)
                     ase_bam.write(read)
@@ -67,7 +66,7 @@ if __name__ == "__main__":
 
     path_args.add_argument('--input_bam_path', type=str, help='path to input bam', required=True)
     path_args.add_argument('--output_bam_prefix', type=str, help='prefix to save the stratified bams to. e.g. "<output_dir>/some_prefix"', required=True)
-    path_args.add_argument("--junction", type = str, help = "junction e.g. chr1:111111-111113", required=True)
+    path_args.add_argument("--insertion", type = str, help = "insertion e.g. chr1:111111-111113", required=True)
 
     args = parser.parse_args()
 
@@ -78,5 +77,5 @@ if __name__ == "__main__":
     if os.path.isfile(args.output_bam_prefix):
         print('WARNING - {} will be overwrriten. Continuing..'.format(args.output_bam_prefix))
 
-    keep_junction_reads_only(args.input_bam_path, args.output_bam_prefix, args.junction)
+    keep_insertion_reads_only(args.input_bam_path, args.output_bam_prefix, args.insertion)
 
