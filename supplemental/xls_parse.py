@@ -7,6 +7,7 @@ from collections import defaultdict
 from load_peptides import load_peptide_dict
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
+pd.options.mode.chained_assignment = None
 
 parser = argparse.ArgumentParser()
 args_path = parser.add_argument_group("Inputs:")
@@ -121,6 +122,7 @@ def get_pypresent_output(peptide_filepath, xls_file_list, output_path, affinity_
     
     lowest_peptide_string = []
     for index, row in allele_br_output_df.iterrows():
+        #print(index)
         x = row['lowest_allele']
         lowest_peptide_string.append(row[x])
     allele_br_output_df['peptide'] = lowest_peptide_string
@@ -128,6 +130,8 @@ def get_pypresent_output(peptide_filepath, xls_file_list, output_path, affinity_
     allele_br_output_df = allele_br_output_df[allele_br_output_df.columns.drop(list(allele_br_output_df.filter(regex='_peptide')))]
     allele_br_output_df = allele_br_output_df.drop(['lowest_allele'], axis = 1)    
 
+    #allele_br_output_df.index = allele_br_output_df.index.astype(int)
+    #allele_br_output_df.sort_index()
     allele_br_output_df.to_csv(output_path, sep='\t')
     if output_pep_path:
         allele_br_pep_output_df.to_csv(output_pep_path, sep='\t')

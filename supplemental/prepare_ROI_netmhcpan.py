@@ -21,43 +21,30 @@ args = parser.parse_args()
 
 # Helper Function
 
-def create_peptides(mhc, short_seq, junc_aa_pos):
+def create_peptides(mhc, short_seq, ins_aa_pos):
     '''Creates peptides spanning junction from buffered sequence'''
     kmer_list = [8,9,10,11] if mhc == 'I' else [15]
+    allowed_indicies = []
+    if str(ins_aa_pos[0]) == 'nan' or str(ins_aa_pos[1]) == 'nan':
+        return None
+    if mhc == 'I':
+        for i in range(ins_aa_pos[0], ins_aa_pos[1]+12):
+            allowed_indicies.append(i)
+    if mhc == 'II':
+        for i in range(ins_aa_pos[0], ins_aa_pos[1]+16):
+            allowed_indicies.append(i)
     peptides = []
 
     for kmer in kmer_list:
         for i in range(len(short_seq) - (kmer-1)):
             start = i
-            end = i + kmer 
-            # check if spans junctions
-            if start <= junc_aa_pos[0] and junc_aa_pos[1] < end:
+            end = i + kmer
+            if end == ins_aa_pos[0]:
+                continue
+            if end in allowed_indicies and start <= ins_aa_pos[1]:
                 peptides.append(short_seq[start:end])
+
     return peptides
-
-#Concatenate the WT junction peptides found in the normals all together
-path = '{}'.format(args.isoforms_dir)
-norm_path = os.path.join(path, 'normals')
-full_wt_peptides = pd.DataFrame(columns = ['isoform', 'isoform_num', 'junc_aa_pos', 'peptides', 'junction', 'frame_selection'])
-for normal in os.listdir(norm_path):
-    wt_peptides_path = os.path.join(norm_path, normal, 'intermediate_results', 'neopeptides.tsv')
-    peps = pd.read_csv(wt_peptides_path, sep = '\t')
-    full_wt_peptides = full_wt_peptides.append(peps)
-full_wt_peptides = full_wt_peptides.drop_duplicates(subset = ['isoform', 'junc_aa_pos', 'peptides', 'junction', 'frame_selection'])
-full_wt_peptides = full_wt_peptides.reset_index(drop = True)
-
-#Concatenate this new master list of normal peptides to the neopeptides.tsv files (might as well save it as a new file) for each sample
-tum_path = os.path.join(path, 'tumors')
-for tumor in os.listdir(tum_path):
-    tum_peptides_path = os.path.join(tum_path, tumor, 'intermediate_results', 'neopeptides.tsv')
-    intermediate_dir = os.path.join(tum_path, tumor, 'intermediate_results')
-    try:
-        t_peps = pd.read_csv(tum_peptides_path, sep = '\t')
-    except:
-        t_peps = pd.DataFrame(columns = ['isoform', 'isoform_num', 'junc_aa_pos', 'peptides', 'junction', 'frame_selection'])
-    t_peps = t_peps.append(full_wt_peptides)
-    t_peps = t_peps.reset_index(drop = True)
-    t_peps.to_csv('{}/all_peptides.tsv'.format(intermediate_dir), sep = '\t', index = False)
 
 # Create input for pyprsent pipeline
 # fasta of isoforms for NetMHCpan input
@@ -71,16 +58,16 @@ maf_dir = '{}'.format(args.output_directory_mapping)
 patient = '{}'.format(args.patient_sample)
     
 # read neopeptides.tsv file
-path = os.path.join(output_dir, 'tumors', patient, 'intermediate_results', 'all_peptides.tsv')
+path = os.path.join(output_dir, 'tumors', patient, 'intermediate_results', 'neopeptides.tsv')
 df = pd.read_csv(path, sep='\t')
 df = df.dropna(subset=['isoform'])
-df['junc_aa_pos'] = df['junc_aa_pos'].apply(literal_eval)
+df['ins_aa_pos'] = df['ins_aa_pos'].apply(literal_eval)
 
 # class I
-df['class_I_peptides'] = df.apply(lambda x: create_peptides('I', x['isoform'], x['junc_aa_pos']), axis=1)
+df['class_I_peptides'] = df.apply(lambda x: create_peptides('I', x['isoform'], x['ins_aa_pos']), axis=1)
 
 # class II
-df['class_II_peptides'] = df.apply(lambda x: create_peptides('II', x['isoform'], x['junc_aa_pos']), axis=1)
+df['class_II_peptides'] = df.apply(lambda x: create_peptides('II', x['isoform'], x['ins_aa_pos']), axis=1)
 
 # assign short netmhcpan ID
 new_ids = [i for i in range(0, len(df))]
