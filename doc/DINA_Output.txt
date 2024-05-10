@@ -1,0 +1,106 @@
+DINA Outputted Files
+
+1. get_wt.sh:
+•	{Tumor_Sample_Name}_junctions.tsv:
+		New-line separated list of junctions of interest per individual tumor sample
+
+•	{Normal_Sample_Name}_junctions.tsv:
+		New-line separated list of wild-type junctions that share a start or end site with the original junctions of interest per individual normal sample
+
+•	{Filename_Prefix}_junctionsOfInterest_plusWT.tsv:
+		Table of junctions of interest and their corresponding wild-type junction for all samples with relevant data extracted from STAR's SJ.out.tab files
+
+•	{Filename_Prefix}_ase_wt_pairs.tsv:
+		Table of alternatively spliced junctions of interest and their found wild-type pairing where possible
+
+2. main.sh / main_ROI.sh
+•	../{isoforms_output_directory}/{Sample_Name/} Directory containing:
+		{Sample_Name}.identify_junctions.sh bash file with the Trinity execution
+
+•	intermediate_results: 
+		../{chromosome}:{start-end} directory with Trinity output
+
+•	gene_mappings.txt:
+		Tab separated text file containing gene labels for the provided junctions/regions of interest
+
+•	strand_flags.txt:
+		Tab separated text file containing the region of interest label, the mapping ensembl ID, and whether the strand info matches between the junction and the peptide from the provided reference FASTA file
+
+•	neopeptides.tsv:
+		Tab separated table containing the assembled isoform, junction position (python-indexed), peptides (kmer length = 15), and the transcript ID.
+
+3. get_netmhcpan.sh / get_netmchpan_ROI.sh
+•	../{output_directory_fastas}/mhc_i/{Sample_Name}.fasta
+		Fasta file containing the netmhcpan id for isoform and the isoform sequence
+
+•	../{output_directory_fastas}/mhc_i/{Sample_Name}.peptides
+		Fasta file containing the netmhcpan id of the isoform and all possible k-mers of length 8-11 spanning the junction
+
+•	../{output_directory_fastas}/mhc_ii/{Sample_Name}.fasta
+		Fasta file containing the netmhcpan id for isoform and the isoform sequence
+
+•	../{output_directory_fastas}/mhc_ii/{Sample_Name}.peptides
+		Fasta file containing the netmhcpan id of the isoform and all possible k-mers of length 15 spanning the junction
+
+•	../{output_directory_mapping_files}/{Sample_Name}.tsv
+		Tab separated file containing the same results from step 2, but with an additional NetMHCpan id to match peptides to their corresponding isoform and junction event after running NetMHCpan
+
+•	../{output_directory_netmhcpan_results}/{Sample_Name}.xlsoutput
+		Tab separated output table from NetMHCPan containing binding affinity scores for every possible peptide at every provided junction for the sample
+
+4. xls_parser.sh
+•	{Sample_Name}.output:
+		Tab separated output table containing the affinity scores for each allele for the highest binding peptide per isoform
+
+5. get_phbr.sh / get_phbr_ROI.sh
+•	fin_results.txt:
+		Full tab separated results table of PHBR scores and corresponding peptide/isoform results for both the alternatively spliced junction event, and the corresponding wild-type where applicable. Lower PHBR values = higher binding affinity. This file contains all of the possible highest binding peptides and all of the trinity assembled isoforms per alternative splicing event
+
+•	raw_results.txt:
+		Same as the above, however contains a summarized tab separated results table with only the most commonly occuring peptide and isoform across the samples for each event
+
+Results Files Column Descriptions
+•	ASE_junction/ROI:
+		Junction or Region of Interest Coordinates
+
+•	Best_ASE_Peptide_HLA_Pair
+		Strongest binding kmer/peptide found for the event and the HLA allele type to which it would best bind to
+
+•	ASE_peptide
+		The highest binding kmer/peptide for each sample the junction/region of interest was found in
+
+•	Average_ASE_PHBR_Score(s)
+		For each event, a PHBR score is calculated using the harmonic mean of the NetMHCpan binding affinity scores, accounting for all possible HLA allele types in the tumor sample. From here, an Average PHBR score is calculated based on all of the PHBR scores for the event in the tumor samples.
+
+•	ASE_PHBR_Score (raw results only)
+		A list of PHBR scores for every sample for the event
+
+•	ASE_#Reads (raw results only)
+		A list of the total number of reads that spanned the junction/region of interest for each tumor sample
+
+•	ASE_isoforms (raw results only)
+		A list of the full isoform sequence assembled by Trinity for the junction/region of interest event for each tumor sample
+
+•	Tumor_samples_with_junction
+		List of tumor samples that were determined to have the junction/region event of interest with a potential neoantigen
+
+•	%samples_with_ASE_junction
+		Percentage of tumor samples that actually had the junction event and a potential neoantign
+
+•	ASE_best_alleles
+		The HLA alleles in each tumor sample that displayed the strongest ability to bind to the listed potential neoantigen
+
+•	WT_junction
+		Coordinates for the “wild-type” junction that shares a start or end site with the junction of interest.
+
+•	WT_peptide
+		The highest binding kmer/peptide formed in the normal samples as a result of the “wild-type” junction
+
+•	Average_WT_PHBR_Score(s)
+		Same as “Average_ASE_PHBR_Score(s)”. Note: PHBR is again calculated using the HLA types of the tumor samples, NOT the normal in this case. This is done to compare how the potential “wild-type” peptide would bind in a patient.
+
+•	WT_best_alleles
+		The HLA alleles in each tumor sample that displayed the strongest ability to bind to the listed “wild-type” peptide
+
+•	Symbol
+		The HUGO gene symbol that corresponds to the splicing event

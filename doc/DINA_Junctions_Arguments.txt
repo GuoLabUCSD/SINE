@@ -1,0 +1,86 @@
+DINA Junctions Arguments:
+
+get_wt.sh
+ Arguments:
+		-i      
+			New line separated list of junctions of interest to evaluate. Column header line should begin with “junction”. The junction strings should be formatted based on the reference GTF file seqname column used during alignment. Ex) Gencode reference GTF -> chr1:10001-10021. Ex) ENSEMBL reference GTF -> 1:10001-10021. WARNING: Providing ASE events that share a start/end site with each other will impact how DINA detects the WT event in the normal samples, be sure to verify that the list of events of interest are ones that are differentially expressed between tumor and normal.
+		-b      
+			Path to a Directory containing BAM files for the tumor samples of interest and STAR's SJ.tab.out files
+   		-w
+			Path to a Directory containing BAM files for the normal samples and STAR's SJ.tab.out files
+		-n      
+			Prefix to what the output files should be named
+		-o      
+			Output Directory to store files
+		-p
+			Path to the DINA Directory
+   		-m
+     			Data is from a mouse genome [Optional]
+
+main.sh
+ Arguments:
+		-b
+			Path to Tumor RNA BAM file aligned to the genome for a single sample
+		-j
+			Path to Junctions of interest file for the corresponding sample generated in get_wt.sh
+		-g
+			Path to GTF annotation file
+		-f
+			Path to CDS fasta file
+		-t
+			Path to Trinity Singularity/Apptainer Image
+		-o
+			Path to ouput directory where results should be stored
+		-p
+			Path to the DINA directory
+		-s
+			Name of the sample being analyzed 
+		-r
+			Integer specifying a multiplication factor for read duplication. In cases where Trinity is not able to assemble an isoform due to a lack of junction/ROI users are able to duplicate the total number of reads by this factor if desired. WARNING: Doing so will increase the false positive rate of an actual event. Additionally, users should be aware of the potential increase in runtime and diskspace required when using this argument.
+   		-m
+     			Data is from a mouse genome [Optional]
+
+get_netmhcpan.sh
+ Arguments:
+		-i
+			Path to a directory with tumor and normal subdirectories sample containing isoform results from main.sh
+		-f
+			Path to an output directory to store fasta files of isoforms
+		-m
+			Path to an output directory to store isoform to NetMHCpan id mapping files
+		-o
+			Path to an output directory to store NetMHCpan results
+		-a
+			Path to a tab-separated text file of MHC alleles to check peptide binding against for the sample. See {../examples/mhc_allele_table.txt} to see how the allele table should be formatted.
+		-s
+			Name of the sample being analyzed
+		-p
+			Path to the DINA directory	
+			
+xls_parser.sh
+ Arguments:
+		-i
+			Path to a directory of NetMHCpan xlsoutput results files
+		-f
+			Path to the mhc_i subdirectory of fasta files containing the isoforms. The mhc_i subdirectory in the fasta output directory from get_netmhcpan.sh is the input directory here
+		-o
+			Path to a directory to store newly parsed affinity files
+		-p
+			Path to the DINA directory
+
+get_phbr.sh
+ Arguments:
+		-j
+			Path to the full junctions table generated from get_wt.sh
+		-i
+			Path to a Directory of isoforms generated from main.sh
+		-a
+			Path to a directory of allele affinity scores. The output directory from xls_parser.sh is the input directory here
+		-m
+			Path to a directory containing sample files with mapping IDs
+   		-t
+			Path to a table containing the junctions of interest and their corresponding wild-type junction
+		-o
+			Path to a directory to store the results tables
+		-p
+			Path to the DINA directory
