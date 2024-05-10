@@ -1,5 +1,0 @@
-ASE_ROI	Best_ASE_Peptide_HLA_Pair	ASE_peptide	Average_ASE_PHBR_Score(s)	Tumor_samples_with_ROI	%samples_with_ASE_ROI	ASE_best_alleles	Symbol
-19:4162662-4162682	['QSLVQEGYP', 'H-2-Db']	['QSLVQEGYP']	23.669397905074874	['tumor1']	100.0	['H-2-Db']	Pitpnm1
-19:4199341-4199351	['AQLFGRTCL', 'H-2-Db']	['AQLFGRTCL']	1.4944258450142984	['tumor1']	100.0	['H-2-Db']	Coro1b
-19:5014702-5014707	['VKDLSAEEL', 'H-2-Db']	['VKDLSAEEL']	6.082352496956871	['tumor1']	100.0	['H-2-Db']	Mrpl11
-19:8903068-8903098	['ITPTYARL', 'H-2-Kb']	['ITPTYARL']	0.01221695238095238	['tumor1']	100.0	['H-2-Kb']	B3gat3
