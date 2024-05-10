@@ -24,12 +24,13 @@ Available options:
 -o    output directory [REQUIRED]
 -p    pipeline directory [REQUIRED]
 -s    sample_name [REQUIRED]
+-r    integer specifying the factor with which to duplicate the number of reads by [OPTIONAL]
 -m    data is from a mouse genome [OPTIONAL]
 EOF
   exit
 }
 
-while getopts "b:j:g:f:t:o:p:s:mh" flag ; do
+while getopts "b:j:g:f:t:o:p:s:r::mh" flag ; do
 
 	case "${flag}" in
 		b) tumor_rna_bam=${OPTARG};;
@@ -40,6 +41,7 @@ while getopts "b:j:g:f:t:o:p:s:mh" flag ; do
 		p) pipeline_dir=${OPTARG};;
 		o) output_dir=${OPTARG};;
 		s) sample_name=${OPTARG};;
+		r) read_boost=${OPTARG};;
 		m) mouse='This_is_a_Mouse_Genome';;
 		h) usage;;
 	esac
@@ -115,13 +117,12 @@ echo "
 
 # make intermediate results dir
 
-python $pipeline_dir/alt_splice_neoantigens/scripts/prepare_trinity_scripts.py \
---bam_filepath $tumor_rna_bam \
---junction_file $junction_file \
---output_script_path $output_dir/$rna_genome_basename.identify_junctions.sh \
---work_dir $output_dir/intermediate_results \
---trinity_sif $trinity_image \
---pipeline_dir $pipeline_dir/alt_splice_neoantigens
+if [ -z $read_boost ]; then
+	python $pipeline_dir/alt_splice_neoantigens/scripts/prepare_trinity_scripts.py --bam_filepath $tumor_rna_bam --junction_file $junction_file --output_script_path $output_dir/$rna_genome_basename.identify_junctions.sh --work_dir $output_dir/intermediate_results --trinity_sif $trinity_image --pipeline_dir $pipeline_dir/alt_splice_neoantigens
+
+else
+	python $pipeline_dir/alt_splice_neoantigens/scripts/prepare_trinity_scripts.py --bam_filepath $tumor_rna_bam --junction_file $junction_file --output_script_path $output_dir/$rna_genome_basename.identify_junctions.sh --work_dir $output_dir/intermediate_results --trinity_sif $trinity_image --pipeline_dir $pipeline_dir/alt_splice_neoantigens --read_boost $read_boost
+fi
 
 echo "
 ##################################
@@ -141,7 +142,3 @@ if [ -z $mouse ]; then
 else
 	python $pipeline_dir/alt_splice_neoantigens/scripts/mouse_generate_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file -s $sample_name -b $tumor_rna_bam
 fi
-
-
-
-
