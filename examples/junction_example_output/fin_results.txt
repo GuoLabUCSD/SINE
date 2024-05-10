@@ -1,4 +1,0 @@
-ASE_junction	Best_ASE_Peptide_HLA_Pair	ASE_peptide	Average_ASE_PHBR_Score(s)	Tumor_samples_with_junction	%samples_with_ASE_junction	ASE_best_alleles	WT_junction	WT_peptide	Average_WT_PHBR_Score(s)	WT_best_alleles	Symbol
-19:4061424-4062551	['HAPKKTSFGSL', 'H-2-Db']	['HAPKKTSFGSL']	1.2247918697352587	['tumor1']	100.0	['H-2-Db']	nan	nan	nan	nan	Ndufv1
-19:4162510-4162662	['QSLVQEGYP', 'H-2-Db']	['QSLVQEGYP']	23.669397905074874	['tumor1']	100.0	['H-2-Db']	19:4162510-4162748	['QSLVQEVEL']	0.9951454714684613	['H-2-Db']	Pitpnm1
-19:8899344-8903068	['ITPTYARL', 'H-2-Kb']	['ITPTYARL']	0.01221695238095238	['tumor1']	100.0	['H-2-Kb']	19:8899344-8902902	['ITPTYARL']	0.01221695238095238	['H-2-Kb']	B3gat3
