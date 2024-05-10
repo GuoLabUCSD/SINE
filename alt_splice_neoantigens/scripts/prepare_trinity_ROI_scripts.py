@@ -18,6 +18,8 @@ path_args.add_argument('-T', '--trinity_sif', type=str, required=True,
     help="Path to Trinity singularity image") 
 path_args.add_argument('-P', '--pipeline_dir', type=str, required=True, 
     help="Path to pipeline") 
+path_args.add_argument('-r', '--read_boost', type=int, required=False,
+    help="Read Duplication Factor")
 path_args.add_argument('-c', '--clean_intermediate_files', type=bool, 
     default=True, 
     help="Set to False to retain intermediate generated files")
@@ -50,15 +52,20 @@ def prepare_cmd(f, insertion):
     f.write(f'bedtools bamtofastq -i {insertion}.trinity_in_sorted.ase.bam -fq {insertion}.trinity_in.ase.fq -fq2 {insertion}.trinity_in2.ase.fq\n')
     # f.write(f'bedtools bamtofastq -i {insertion}.trinity_in.wildtype.bam -fq {insertion}.trinity_in.wildtype.fq\n\n')
 
-
-    # only run trinity for bams with reads inside
-    #f.write(f'if [ -s {insertion}.trinity_in.ase.bam ]; then\n')
-    #f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --single {insertion}.trinity_in.ase.fq --max_memory 10G --output trinity_out_{insertion}_ase --min_contig_length 50 > /dev/null\n')
-    f.write(f'if [ -s {insertion}.trinity_in_sorted.ase.bam ]; then\n')
-    f.write(f'\tapptainer exec -e {args.trinity_sif} Trinity --seqType fq --left {insertion}.trinity_in.ase.fq --right {insertion}.trinity_in2.ase.fq --SS_lib_type RF --max_memory 10G --output trinity_out_{insertion}_ase --min_contig_length 50 --no_normalize_reads --verbose\n')
-    f.write('fi\n')
+    if args.read_boost:
+        f.write(f'python {args.pipeline_dir}/scripts/read_booster.py --event_dir {args.work_dir}/{insertion} --read_boost {args.read_boost}\n')
+        f.write(f'if [ -s {insertion}.trinity_in_sorted.ase.bam ]; then\n')
+        f.write(f'\tapptainer exec -e {args.trinity_sif} Trinity --seqType fq --left {insertion}.trinity_in_boosted.ase.fq --right {insertion}.trinity_in2_boosted.ase.fq --SS_lib_type RF --max_memory 10G --output trinity_out_{insertion}_ase --min_contig_length 50 > /dev/null\n')
+        f.write('fi\n')
     
-
+    else:
+        # only run trinity for bams with reads inside
+        #f.write(f'if [ -s {insertion}.trinity_in.ase.bam ]; then\n')
+        #f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --single {insertion}.trinity_in.ase.fq --max_memory 10G --output trinity_out_{insertion}_ase --min_contig_length 50 > /dev/null\n')
+        f.write(f'if [ -s {insertion}.trinity_in_sorted.ase.bam ]; then\n')
+        f.write(f'\tapptainer exec -e {args.trinity_sif} Trinity --seqType fq --left {insertion}.trinity_in.ase.fq --right {insertion}.trinity_in2.ase.fq --SS_lib_type RF --max_memory 10G --output trinity_out_{insertion}_ase --min_contig_length 50 > /dev/null\n')
+        f.write('fi\n')
+    
     ### -- WE DON'T CARE ABOUT WILDTYPE HERE -- ##
     # f.write(f'if [ -s {insertion}.trinity_in.wildtype.bam ]; then\n')
     # f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --single {insertion}.trinity_in.wildtype.fq --max_memory 10G --output trinity_out_{insertion}_wildtype --min_contig_length 50 > /dev/null\n\n')
