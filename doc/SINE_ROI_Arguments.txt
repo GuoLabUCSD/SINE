@@ -1,4 +1,4 @@
-DINA Regions of Interest (ROI) Arguments:
+SINE Regions of Interest (ROI) Arguments:
 
 main_ROI.sh	
  Arguments:
@@ -15,7 +15,7 @@ main_ROI.sh
 		-o
 			Path to ouput directory where results should be stored
 		-p
-			Path to the DINA directory
+			Path to the SINE directory
 		-s
 			Name of the sample being analyzed 
 		-d
@@ -40,7 +40,7 @@ get_netmhcpan_ROI.sh
 		-s
 			Name of the sample being analyzed
 		-p
-			Path to the DINA directory	
+			Path to the SINE directory	
 
 xls_parser.sh
  Arguments:
@@ -51,7 +51,7 @@ xls_parser.sh
 		-o
 			Path to a directory to store newly parsed affinity files
 		-p
-			Path to the DINA directory
+			Path to the SINE directory
 
 get_phbr_ROI.sh
  Arguments:
@@ -64,4 +64,4 @@ get_phbr_ROI.sh
    		-o
 			Path to a directory to store the results tables
 		-p
-			Path to the DINA directory
+			Path to the SINE directory
