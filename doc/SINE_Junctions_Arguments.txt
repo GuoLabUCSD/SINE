@@ -1,9 +1,9 @@
-DINA Junctions Arguments:
+SINE Junctions Arguments:
 
 get_wt.sh
  Arguments:
 		-i      
-			New line separated list of junctions of interest to evaluate. Column header line should begin with “junction”. The junction strings should be formatted based on the reference GTF file seqname column used during alignment. Ex) Gencode reference GTF -> chr1:10001-10021. Ex) ENSEMBL reference GTF -> 1:10001-10021. WARNING: Providing ASE events that share a start/end site with each other will impact how DINA detects the WT event in the normal samples, be sure to verify that the list of events of interest are ones that are differentially expressed between tumor and normal.
+			New line separated list of junctions of interest to evaluate. Column header line should begin with “junction”. The junction strings should be formatted based on the reference GTF file seqname column used during alignment. Ex) Gencode reference GTF -> chr1:10001-10021. Ex) ENSEMBL reference GTF -> 1:10001-10021. WARNING: Providing ASE events that share a start/end site with each other will impact how SINE detects the WT event in the normal samples, be sure to verify that the list of events of interest are ones that are differentially expressed between tumor and normal.
 		-b      
 			Path to a Directory containing BAM files for the tumor samples of interest and STAR's SJ.tab.out files
    		-w
@@ -13,7 +13,7 @@ get_wt.sh
 		-o      
 			Output Directory to store files
 		-p
-			Path to the DINA Directory
+			Path to the SINE Directory
    		-m
      			Data is from a mouse genome [Optional]
 
@@ -32,7 +32,7 @@ main.sh
 		-o
 			Path to ouput directory where results should be stored
 		-p
-			Path to the DINA directory
+			Path to the SINE directory
 		-s
 			Name of the sample being analyzed 
 		-r
@@ -55,7 +55,7 @@ get_netmhcpan.sh
 		-s
 			Name of the sample being analyzed
 		-p
-			Path to the DINA directory	
+			Path to the SINE directory	
 			
 xls_parser.sh
  Arguments:
@@ -66,7 +66,7 @@ xls_parser.sh
 		-o
 			Path to a directory to store newly parsed affinity files
 		-p
-			Path to the DINA directory
+			Path to the SINE directory
 
 get_phbr.sh
  Arguments:
@@ -83,4 +83,4 @@ get_phbr.sh
 		-o
 			Path to a directory to store the results tables
 		-p
-			Path to the DINA directory
+			Path to the SINE directory
