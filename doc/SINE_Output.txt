@@ -1,4 +1,4 @@
-DINA Outputted Files
+SINE Outputted Files
 
 1. get_wt.sh:
 •	{Tumor_Sample_Name}_junctions.tsv:
