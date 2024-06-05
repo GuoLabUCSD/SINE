@@ -22,7 +22,7 @@ SINE (Splice Isoform Neoantigen Evaluator) aims to identify potential neoantigen
 	* matplotlib
 	* seaborn
  * SAMtools
- * Singularity/Apptainer
+ 	* Available at: https://www.htslib.org/
  * Trinity 
 	* Available at: https://github.com/trinityrnaseq/trinityrnaseq/wiki/Trinity-in-Docker#running-trinity-using-singularity
 
