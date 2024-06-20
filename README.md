@@ -28,7 +28,7 @@ SINE (Splice Isoform Neoantigen Evaluator) aims to identify potential neoantigen
 
 
 ## Installation:
- 1. git clone https://github.com/GuoLabUCSD/DINA
+ 1. git clone https://github.com/GuoLabUCSD/SINE
  2. From inside the Neoantigen_Pipeline directory users may need to run the below for each function's bash file
 	* chmod u+x {file ending in .sh}
 
