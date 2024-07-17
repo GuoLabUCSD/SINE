@@ -61,10 +61,10 @@ SINE Outputted Files
 
 Results Files Column Descriptions
 •	ASE_junction/ROI:
-		Junction or Region of Interest CoorSINEtes
+		Junction or Region of Interest Coordinates
 
 •	Best_ASE_Peptide_HLA_Pair
-		Strongest binding kmer/peptide found for the event and the HLA allele type to which it would best bind to
+		Strongest binding kmer/peptide found for the event, the HLA allele type to which it best binds to, and the NetMHCpan affinity score
 
 •	ASE_peptide
 		The highest binding kmer/peptide for each sample the junction/region of interest was found in
@@ -91,7 +91,7 @@ Results Files Column Descriptions
 		The HLA alleles in each tumor sample that displayed the strongest ability to bind to the listed potential neoantigen
 
 •	WT_junction
-		CoorSINEtes for the “wild-type” junction that shares a start or end site with the junction of interest.
+		Coordinates for the “wild-type” junction that shares a start or end site with the junction of interest.
 
 •	WT_peptide
 		The highest binding kmer/peptide formed in the normal samples as a result of the “wild-type” junction
