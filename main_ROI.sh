@@ -25,7 +25,7 @@ Available options:
 -p    pipeline directory [REQUIRED]
 -s    sample_name [REQUIRED]
 -r    integer specifying the factor with which to duplicate the number of reads by [OPTIONAL]
--d    regions of interest file also contains junction info [OPTIONAL]
+-d    regions of interest file also contains direction info [OPTIONAL]
 -m    data is from a mouse genome [OPTIONAL]
 EOF
   exit
@@ -44,7 +44,7 @@ while getopts "b:j:g:f:t:o:p:s:r::dmh" flag ; do
 		s) sample_name=${OPTARG};;
 		r) read_boost=${OPTARG};;
 		m) mouse='This_is_a_Mouse_Genome';;
-		d) junc='Data_contains_matching_junctions';;
+		d) direct='Data_contains_direction_info';;
 		h) usage;;
 	esac
 done
@@ -88,14 +88,14 @@ echo "
 ####################################
 "
 # make sure ROI file has required columns 
-if [ -z $junc ]; then
+if [ -z $direct ]; then
 	expected_num=1
 else
 	expected_num=2
 fi
 
 obs_num1=$(grep -Eo 'ROI' $insertion_file | uniq | wc -l)
-obs_num2=$(grep -Eo 'junction' $insertion_file | uniq | wc -l)
+obs_num2=$(grep -Eo 'Direction' $insertion_file | uniq | wc -l)
 obs_num=$(($obs_num1 + $obs_num2))
 
 if [ $expected_num == $obs_num ]; then
@@ -146,14 +146,14 @@ echo "
 ###################################
 "
 if [ -z $mouse ]; then
-	if [ -z $junc ]; then
+	if [ -z $direct ]; then
 		python $pipeline_dir/alt_splice_neoantigens/scripts/human_generate_ROI_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file -s $sample_name -b $tumor_rna_bam
 	else
 		python $pipeline_dir/alt_splice_neoantigens/scripts/human_generate_ROI_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file -s $sample_name -b $tumor_rna_bam -j $insertion_file
 	fi
 
 else
-	if [ -z $junc ]; then
+	if [ -z $direct ]; then
 		python $pipeline_dir/alt_splice_neoantigens/scripts/mouse_generate_ROI_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file -s $sample_name -b $tumor_rna_bam
 	else
 		python $pipeline_dir/alt_splice_neoantigens/scripts/mouse_generate_ROI_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file -s $sample_name -b $tumor_rna_bam -j $insertion_file
