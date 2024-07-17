@@ -19,7 +19,7 @@ main_ROI.sh
 		-s
 			Name of the sample being analyzed 
 		-d
-			Regions of interest file also contains a column named “junction” with corresponding junction regions [Optional]
+			Regions of interest file also contains a column named “Direction” with the corresponding strand direction (F: Forward, R: Reverse, U: Unknown) of each region [Optional]
 		-r
 			Integer specifying a multiplication factor for read duplication. In cases where Trinity is not able to assemble an isoform due to a lack of junction/ROI users are able to duplicate the total number of reads by this factor if desired. WARNING: Doing so will increase the false positive rate of an actual event. Additionally, users should be aware of the potential increase in runtime and diskspace required when using this argument.
    		-m

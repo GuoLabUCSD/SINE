@@ -24,7 +24,7 @@ SINE Outputted Files
 		Tab separated text file containing gene labels for the provided junctions/regions of interest
 
 •	strand_flags.txt:
-		Tab separated text file containing the region of interest label, the mapping ensembl ID, and whether the strand info matches between the junction and the peptide from the provided reference FASTA file
+		Tab separated text file containing the mapping ensembl ID, gene symbol, junction/region of interest, and whether the strand info matches between the junction/region and the peptide from the provided reference FASTA file
 
 •	neopeptides.tsv:
 		Tab separated table containing the assembled isoform, junction position (python-indexed), peptides (kmer length = 15), and the transcript ID.
@@ -61,7 +61,7 @@ SINE Outputted Files
 
 Results Files Column Descriptions
 •	ASE_junction/ROI:
-		Junction or Region of Interest Coordinates
+		Junction or Region of Interest CoorSINEtes
 
 •	Best_ASE_Peptide_HLA_Pair
 		Strongest binding kmer/peptide found for the event and the HLA allele type to which it would best bind to
@@ -91,7 +91,7 @@ Results Files Column Descriptions
 		The HLA alleles in each tumor sample that displayed the strongest ability to bind to the listed potential neoantigen
 
 •	WT_junction
-		Coordinates for the “wild-type” junction that shares a start or end site with the junction of interest.
+		CoorSINEtes for the “wild-type” junction that shares a start or end site with the junction of interest.
 
 •	WT_peptide
 		The highest binding kmer/peptide formed in the normal samples as a result of the “wild-type” junction

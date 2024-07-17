@@ -55,7 +55,7 @@ def prepare_cmd(f, insertion):
     if args.read_boost:
         f.write(f'python {args.pipeline_dir}/scripts/read_booster.py --event_dir {args.work_dir}/{insertion} --read_boost {args.read_boost}\n')
         f.write(f'if [ -s {insertion}.trinity_in_sorted.ase.bam ]; then\n')
-        f.write(f'\tapptainer exec -e {args.trinity_sif} Trinity --seqType fq --left {insertion}.trinity_in_boosted.ase.fq --right {insertion}.trinity_in2_boosted.ase.fq --SS_lib_type RF --max_memory 10G --output trinity_out_{insertion}_ase --min_contig_length 50 > /dev/null\n')
+        f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --left {insertion}.trinity_in_boosted.ase.fq --right {insertion}.trinity_in2_boosted.ase.fq --SS_lib_type RF --max_memory 10G --output trinity_out_{insertion}_ase --min_contig_length 50 > /dev/null\n')
         f.write('fi\n')
     
     else:
@@ -63,7 +63,7 @@ def prepare_cmd(f, insertion):
         #f.write(f'if [ -s {insertion}.trinity_in.ase.bam ]; then\n')
         #f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --single {insertion}.trinity_in.ase.fq --max_memory 10G --output trinity_out_{insertion}_ase --min_contig_length 50 > /dev/null\n')
         f.write(f'if [ -s {insertion}.trinity_in_sorted.ase.bam ]; then\n')
-        f.write(f'\tapptainer exec -e {args.trinity_sif} Trinity --seqType fq --left {insertion}.trinity_in.ase.fq --right {insertion}.trinity_in2.ase.fq --SS_lib_type RF --max_memory 10G --output trinity_out_{insertion}_ase --min_contig_length 50 > /dev/null\n')
+        f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --left {insertion}.trinity_in.ase.fq --right {insertion}.trinity_in2.ase.fq --SS_lib_type RF --max_memory 10G --output trinity_out_{insertion}_ase --min_contig_length 50 > /dev/null\n')
         f.write('fi\n')
     
     ### -- WE DON'T CARE ABOUT WILDTYPE HERE -- ##

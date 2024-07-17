@@ -6,7 +6,6 @@ from Bio.SeqIO import parse
 from Bio.Seq import reverse_complement, translate
 import sys
 from _load_seq_dict import load_CDS_dict
-from _load_junction_strand import get_junc_strand
 from human_slice_retrieve_gtf import *
 import pysam
 from Bio import pairwise2
@@ -118,7 +117,7 @@ def create_peptides_from_read(protein_seq, ins_aa_pos, mhc):
     #else:
     #    return None
 
-def create_peptides_from_consensus(consensus_seq_list, ins_pos_list, insertion, junction='Empty', verbose = False):
+def create_peptides_from_consensus(consensus_seq_list, ins_pos_list, insertion, direction='Empty', verbose = False):
     '''
     Depending on insertion location, create peptides
         - start,nan : from start to end of consensus
@@ -133,7 +132,7 @@ def create_peptides_from_consensus(consensus_seq_list, ins_pos_list, insertion, 
     for i, consensus_seq in enumerate(consensus_seq_list):
         ins_nt_pos = ins_pos_list[i]
 
-        frame, ins_aa, all_alignment_scores, selection_criteria = get_best_frame(consensus_seq, ins_nt_pos, insertion, junction, verbose=False)
+        frame, ins_aa, all_alignment_scores, selection_criteria = get_best_frame(consensus_seq, ins_nt_pos, insertion, direction, verbose=False)
         if verbose:
             print(selection_criteria)
 
@@ -151,7 +150,7 @@ def create_peptides_from_consensus(consensus_seq_list, ins_pos_list, insertion, 
     return total_pep_list, frame_list, total_aa_list, alignment_scores, selection_criteria_list
 
 
-def get_best_frame(seq, nt_pos, insertion, junction, std_thresh=10, verbose=False):
+def get_best_frame(seq, nt_pos, insertion, direction, std_thresh=10, verbose=False):
     '''
     Take best frame if the std is greater than some threshold, if not, take frame with least *
     '''
@@ -175,19 +174,19 @@ def get_best_frame(seq, nt_pos, insertion, junction, std_thresh=10, verbose=Fals
     #Get insertion Strand Info
     
     if args.insertion_file:
-        ins_strand = get_junc_strand(args.tumor_rna_bam, args.sample_name, junction)
+        ins_strand = direction
     else:
-        ins_strand = str(0)
+        ins_strand = 'U'
     
     for enst in enst_list:
         ref_seq = translate(CDS_dict[enst]) # include stop codons 
 
-        # check strand info, if junction is forward stranded use forward translation frames, reverse stranded used the reverse compliment frames, undefined checks all
-        if ins_strand == str(1):
+        # check strand info, if direction is forward stranded use forward translation frames, reverse stranded used the reverse compliment frames, undefined checks all
+        if ins_strand == 'F':
             seqs2do = [(seq, nt_pos)]
-        elif ins_strand == str(2):
+        elif ins_strand == 'R':
             seqs2do = [(rc, rc_nt_pos)]
-        elif ins_strand == str(0):
+        elif ins_strand == 'U':
             seqs2do = [(rc, rc_nt_pos), (seq, nt_pos)]
         
         for c in seqs2do: 
@@ -221,14 +220,14 @@ def get_best_frame(seq, nt_pos, insertion, junction, std_thresh=10, verbose=Fals
     id2find = output_enst_list[best_frame]
 
     if args.insertion_file:
-        if strand_dict[id2find] == str(1) and ins_strand == str(1):
-            strand_file.write('{}\t{}\tForward_MATCH\n'.format(id2find, junction))
-        if strand_dict[id2find] == str(-1) and ins_strand == str(2):
-            strand_file.write('{}\t{}\tReverse_MATCH\n'.format(id2find, junction))
-        if strand_dict[id2find] == str(1) and ins_strand != str(1):
-            strand_file.write('{}\t{}\tMISMATCH\n'.format(id2find, junction))
-        if strand_dict[id2find] == str(-1) and ins_strand != str(2):
-            strand_file.write('{}\t{}\tMISMATCH\n'.format(id2find, junction))
+        if strand_dict[id2find] == str(1) and ins_strand == 'F':
+            strand_file.write('{}\t{}\t{}\tForward_MATCH\n'.format(id2find, gene_dict[id2find], insertion))
+        if strand_dict[id2find] == str(-1) and ins_strand == 'R':
+            strand_file.write('{}\t{}\t{}\tReverse_MATCH\n'.format(id2find, gene_dict[id2find], insertion))
+        if strand_dict[id2find] == str(1) and ins_strand != 'F':
+            strand_file.write('{}\t{}\t{}\tMISMATCH\n'.format(id2find, gene_dict[id2find], insertion))
+        if strand_dict[id2find] == str(-1) and ins_strand != 'R':
+            strand_file.write('{}\t{}\t{}\tMISMATCH\n'.format(id2find, gene_dict[id2find], insertion))
 
     gene_file.write('{}\t{}\n'.format(insertion, gene_dict[id2find]))
 
@@ -252,7 +251,7 @@ if __name__ == "__main__":
     path_args.add_argument('-b', '--tumor_rna_bam', type=str, required=True,
         help='RNA BAM File Path')
     path_args.add_argument('-j', '--insertion_file', type=str, required=False,
-        help='File containing list of insertion regions and {optionally} the corresponding junction region')
+        help='File containing list of insertion regions and {optionally} the corresponding strand direction of the region')
    
     args = parser.parse_args()
 
@@ -284,7 +283,7 @@ if __name__ == "__main__":
 
         if args.insertion_file:
             ins_junc_frame = pd.read_csv('{}'.format(args.insertion_file), sep = '\t')
-            junction = ins_junc_frame.loc[ins_junc_frame['ROI'] == insertion, 'junction'].iloc[0]
+            direction = ins_junc_frame.loc[ins_junc_frame['ROI'] == insertion, 'Direction'].iloc[0]
 
         ase_bam = os.path.join(working_dir, f'{insertion}.trinity_in_sorted.ase.bam')
         ase_trinity_fasta = os.path.join(working_dir, f'trinity_out_{insertion}_ase', 'Trinity.fasta')
@@ -315,7 +314,7 @@ if __name__ == "__main__":
 
             ins_pos_list, consensus_seq_list = get_consensus_seqs(ase_trinity_fasta, reads, ins_pos_list, insertion)
             if args.insertion_file:
-                peptides, frame_list, ins_aa_list, alignment_scores, frame_selection = create_peptides_from_consensus(consensus_seq_list, ins_pos_list, insertion, junction)
+                peptides, frame_list, ins_aa_list, alignment_scores, frame_selection = create_peptides_from_consensus(consensus_seq_list, ins_pos_list, insertion, direction)
             else:
                 peptides, frame_list, ins_aa_list, alignment_scores, frame_selection = create_peptides_from_consensus(consensus_seq_list, ins_pos_list, insertion)
 

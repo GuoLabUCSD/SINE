@@ -22,6 +22,9 @@ def keep_insertion_reads_only(bampath, output_prefix, insertion):
     start, end = insertion.split('-')
     start = int(start)-1      # zero based
     end = int(end)-1          # zero based
+    middle_pos = []
+    for i in range(start+1, end):
+        middle_pos.append(i)
     used_mates = []
     
     # load bam
@@ -52,6 +55,16 @@ def keep_insertion_reads_only(bampath, output_prefix, insertion):
                     used_mates.append(mate_header)
                 except:
                     continue
+
+        elif all(item in middle_pos for item in read.positions):
+            try:
+                read_mate = input_bam.mate(read)
+                ase_bam.write(read)
+                ase_bam.write(read_mate)
+                mate_header = str(read_mate)
+                used_mates.append(mate_header)
+            except:
+                continue
 
 
     # save output bams 

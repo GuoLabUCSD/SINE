@@ -265,14 +265,28 @@ for sample_type in os.listdir(path):
             strand_file = strand_file.loc[strand_file['Flag'] == 'MISMATCH']
             for index, row in strand_file.iterrows():
                 if row['Junction'] not in mismatch_dict:
-                    mismatch_dict['Junction'] = row['Symbol']
+                    mismatch_dict[row['Junction']] = row['Symbol']
 
 output_df = my_final_df.copy()
 for index, row in my_final_df.iterrows():
     pair = (row['ASE_junction'], row['Symbol'])
     for key, value in mismatch_dict.items():
         if (key, value) == pair:
-            output_df = output_df.drop((output_df['ASE_junction'] == key) & (output_df['Symbol'] == value))
+            output_df = output_df[(output_df['ASE_junction'] != key) & (output_df['Symbol'] != value)]
+
+for index, row in output_df.iterrows():
+    b_pep = row['Best_ASE_Peptide_HLA_Pair'][0]
+    b_hla = row['Best_ASE_Peptide_HLA_Pair'][1]
+    samples = row['Tumor_samples_with_junction']
+    for peptide, allele, sample in zip(row['ASE_peptide'], row['ASE_best_alleles'], row['Tumor_samples_with_junction']):
+        if peptide == b_pep and allele == b_hla:
+            file = pd.read_csv('{}/{}.output'.format(args.affinity_scores, sample), sep = '\t')
+            file = file.loc[file['peptide'] == peptide].reset_index(drop = True)
+            first_row = file.iloc[[0]]
+            first_row = first_row.drop(columns = ['Unnamed: 0', 'peptide'])
+            value = first_row.min(axis = 1)
+            row['Best_ASE_Peptide_HLA_Pair'].append(float(value))
+            break
 
 output_df.to_csv('{}/fin_results.txt'.format(args.output_directory), sep='\t', index=False)
 raw_df.to_csv('{}/raw_results.txt'.format(args.output_directory), sep='\t', index=False)
