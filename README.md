@@ -7,7 +7,7 @@ SINE (Splice Isoform Neoantigen Evaluator) aims to identify potential neoantigen
  * STAR SJ.out.tab files for samples of interest
 
 
-## Minimum Software Requirements (Recommended to install via pip):
+## Minimum Software Requirements:
  * bedtools
 	* Available at: https://github.com/arq5x/bedtools2
 	* Note: bedtools should be available in your PATH variable
