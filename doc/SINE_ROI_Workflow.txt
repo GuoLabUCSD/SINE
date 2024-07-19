@@ -18,7 +18,7 @@ SINE for Region of Interest (ROI) Workflow:
 	-j ../examples/regions_list.txt \
 	-g Mus.musculus.GRCm39.107.gtf \
 	-f Mus_musculus.GRCm39.cds.all.fa \
-	-t ../trinity_installation_folder/trinityrnaseq_latest.sif \
+	-t ../trinity_installation_folder/trinityrnaseq.v2.15.1.simg \
 	-o isoforms_output/tumors \
 	-p ../SINE \
 	-s tumor1 \
