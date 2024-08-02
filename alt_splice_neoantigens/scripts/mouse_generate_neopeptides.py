@@ -266,7 +266,10 @@ if __name__ == "__main__":
 
         junction = str(junction_folder)
         ase_bam = os.path.join(working_dir, f'{junction}.trinity_in_sorted.ase.bam')
-        ase_trinity_fasta = os.path.join(working_dir, f'trinity_out_{junction}_ase', 'Trinity.fasta')
+        if os.path.isfile(os.path.join(working_dir, f'trinity_out_{junction}_ase.Trinity.fasta')):
+            ase_trinity_fasta = os.path.join(working_dir, f'trinity_out_{junction}_ase.Trinity.fasta')
+        else:
+            ase_trinity_fasta = os.path.join(working_dir, f'trinity_out_{junction}_ase', 'Trinity.fasta')
         
         #wt_bam = os.path.join(working_dir, f'{junction}.trinity_in.wildtype.bam')
         #wt_trinity_fasta = os.path.join(working_dir, f'trinity_out_{junction}_wildtype','Trinity.fasta')

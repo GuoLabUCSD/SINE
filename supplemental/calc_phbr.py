@@ -200,8 +200,10 @@ for index, row in pairing_table.iterrows():
             index_val = index_val + 1
     else:
         continue
-my_final_df = my_final_df.drop(columns = ['WT_#Reads', 'WT_isoforms', 'WT_junction_indices', 'ASE_junction_indices'])
+
 raw_df = my_final_df.copy()
+my_final_df = my_final_df.drop(columns = ['WT_#Reads', 'WT_isoforms', 'WT_junction_indices', 'ASE_junction_indices'])
+#raw_df = my_final_df.copy()
 
 ASE_PHBR_col = my_final_df['ASE_PHBR_Score'].to_list()
 WT_pep_col = my_final_df['WT_peptide'].to_list()

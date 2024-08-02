@@ -286,7 +286,10 @@ if __name__ == "__main__":
             direction = ins_junc_frame.loc[ins_junc_frame['ROI'] == insertion, 'Direction'].iloc[0]
 
         ase_bam = os.path.join(working_dir, f'{insertion}.trinity_in_sorted.ase.bam')
-        ase_trinity_fasta = os.path.join(working_dir, f'trinity_out_{insertion}_ase', 'Trinity.fasta')
+        if os.path.isfile(os.path.join(working_dir, f'trinity_out_{insertion}_ase.Trinity.fasta')):
+            ase_trinity_fasta = os.path.join(working_dir, f'trinity_out_{insertion}_ase.Trinity.fasta')
+        else:
+            ase_trinity_fasta = os.path.join(working_dir, f'trinity_out_{insertion}_ase', 'Trinity.fasta')
         
         #wt_bam = os.path.join(working_dir, f'{insertion}.trinity_in.wildtype.bam')
         #wt_trinity_fasta = os.path.join(working_dir, f'trinity_out_{insertion}_wildtype','Trinity.fasta')

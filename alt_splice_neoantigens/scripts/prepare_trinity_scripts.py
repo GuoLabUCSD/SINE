@@ -20,6 +20,8 @@ path_args.add_argument('-P', '--pipeline_dir', type=str, required=True,
     help="Path to pipeline") 
 path_args.add_argument('-r', '--read_boost', type=int, required=False,
     help="Read Duplication Factor")
+path_args.add_argument('-l', '--contig_length', type=int, required=False,
+    help="Minimum Contig Length for Trinity")
 path_args.add_argument('-c', '--clean_intermediate_files', type=bool, 
     default=True, 
     help="Set to False to retain intermediate generated files")
@@ -55,7 +57,7 @@ def prepare_cmd(f, junction):
     if args.read_boost:
         f.write(f'python {args.pipeline_dir}/scripts/read_booster.py --event_dir {args.work_dir}/{junction} --read_boost {args.read_boost}\n')
         f.write(f'if [ -s {junction}.trinity_in_sorted.ase.bam ]; then\n')
-        f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --left {junction}.trinity_in_boosted.ase.fq --right {junction}.trinity_in2_boosted.ase.fq --SS_lib_type RF --max_memory 10G --output trinity_out_{junction}_ase --min_contig_length 50 > /dev/null\n')
+        f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --left {junction}.trinity_in_boosted.ase.fq --right {junction}.trinity_in2_boosted.ase.fq --SS_lib_type RF --max_memory 10G --output trinity_out_{junction}_ase --min_contig_length {args.contig_length} > /dev/null\n')
         f.write('fi\n')
 
     else:
@@ -63,7 +65,7 @@ def prepare_cmd(f, junction):
         #f.write(f'if [ -s {junction}.trinity_in.ase.bam ]; then\n')
         #f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --single {junction}.trinity_in.ase.fq --max_memory 10G --output trinity_out_{junction}_ase --min_contig_length 50 > /dev/null\n')
         f.write(f'if [ -s {junction}.trinity_in_sorted.ase.bam ]; then\n')
-        f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --left {junction}.trinity_in.ase.fq --right {junction}.trinity_in2.ase.fq --SS_lib_type RF --max_memory 10G --output trinity_out_{junction}_ase --min_contig_length 50 > /dev/null\n')
+        f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --left {junction}.trinity_in.ase.fq --right {junction}.trinity_in2.ase.fq --SS_lib_type RF --max_memory 10G --output trinity_out_{junction}_ase --min_contig_length {args.contig_length} > /dev/null\n')
         f.write('fi\n')
     
 
