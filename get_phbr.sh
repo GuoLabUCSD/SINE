@@ -8,7 +8,7 @@ Usage: $(basename "${BASH_SOURCE[0]}") <args>
 This script will calculate a PHBR score for each relevant junction event, compare the junctions of interest to the wild type, and output a list of potential neoantigens.
 
 Arguments:
--i      Path to a Directory of isoforms generated from Main.sh
+-i      Path to a Directory of isoforms generated from main.sh
 -j      Path to the full junctions table generated from get_wt.sh
 -a      Path to a directory of allele affinity scores generated from xls_parser.sh
 -m      Path to a directory containing patient files with mapping ID number to netmhcpan generated from get_netmhcpan.sh
