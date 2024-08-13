@@ -43,6 +43,7 @@ SINE for Region of Interest (ROI) Workflow:
 
 6. Calculate the PHBR score for each peptide and output results tables.
 	../SINE/get_phbr_ROI.sh 
+	-i isoform_output \
 	-a parsed_files \
 	-m netmhcpan_analysis/patient_files_w_id \
 	-o final_results \

@@ -65,6 +65,7 @@ SINE Junctions Workflow
 
 8. Calculate the PHBR score for each peptide and the corresponding wild-type junction where available and output results tables.
 	../SINE/get_phbr.sh \
+	-i isoform_output \
 	-j junction_files/example_experiment_junctionsOfInterest_plusWT.tsv \
 	-a parsed_files \
 	-m netmhcpan_analysis/patient_files_w_id \
