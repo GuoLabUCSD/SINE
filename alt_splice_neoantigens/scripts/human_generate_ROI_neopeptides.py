@@ -61,8 +61,6 @@ def get_consensus_seqs(c_path, kept_reads, ins_positions, insertion, verbose=Fal
  
         ins_pos_list.append((ins_start, ins_end))
         consensus_seq_list.append(consensus_seq)
-        ###TEMP###
-        print(consensus_seq_list)
     return ins_pos_list, consensus_seq_list
 
 def nan_index(l, value):
@@ -166,15 +164,10 @@ def get_best_frame(seq, nt_pos, insertion, direction, std_thresh=10, verbose=Fal
     rc_nt_pos = ((len(seq)-nt_pos[1])-1,(len(seq)-nt_pos[0])-1)
     
     enst_list = retrieve(slice_gtf(insertion, gtf_path=args.gtf_path))
-    ###TEMP
-    print(enst_list)
     if verbose:
         print(enst_list)
     enst_list = [x for x in enst_list if x in CDS_dict]
     enst_list = sorted(enst_list)
-    ###TEMP
-    print('enst_list?')
-    print(enst_list)
     if verbose:
         print('after filter:',enst_list)
 
@@ -185,13 +178,9 @@ def get_best_frame(seq, nt_pos, insertion, direction, std_thresh=10, verbose=Fal
     else:
         ins_strand = 'U'
     for enst in enst_list:
-        ###TEMP
-        print('loop_working')
         ref_seq = translate(CDS_dict[enst]) # include stop codons 
 
         # check strand info, if direction is forward stranded use forward translation frames, reverse stranded used the reverse compliment frames, undefined checks all
-        ###TEMP
-        print(ins_strand)
         if ins_strand == 'F':
             seqs2do = [(seq, nt_pos)]
         elif ins_strand == 'R':
