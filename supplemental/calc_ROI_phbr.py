@@ -184,12 +184,12 @@ for index, row in my_final_df.iterrows():
     pair = (row['ASE_insertion'], row['Symbol'])
     for key, value in mismatch_dict.items():
         if (key, value) == pair:
-            output_df = output_df[(output_df['ASE_junction'] != key) & (output_df['Symbol'] != value)]
+            output_df = output_df[(output_df['ASE_insertion'] != key) & (output_df['Symbol'] != value)]
 
 for index, row in output_df.iterrows():
     b_pep = row['Best_ASE_Peptide_HLA_Pair'][0]
     b_hla = row['Best_ASE_Peptide_HLA_Pair'][1]
-    samples = row['Tumor_samples_with_junction']
+    samples = row['Tumor_samples_with_insertion']
     for peptide, allele, sample in zip(row['ASE_peptide'], row['ASE_best_alleles'], row['Tumor_samples_with_insertion']):
         if peptide == b_pep and allele == b_hla:
             file = pd.read_csv('{}/{}.output'.format(args.affinity_scores, sample), sep = '\t')

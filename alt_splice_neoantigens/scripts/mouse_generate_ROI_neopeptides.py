@@ -283,7 +283,7 @@ if __name__ == "__main__":
 
         if args.insertion_file:
             ins_junc_frame = pd.read_csv('{}'.format(args.insertion_file), sep = '\t')
-            direction = ins_junc_frame.loc[ins_junc_frame['ROI'] == insertion, 'Direction'].iloc[0]
+            direction = ins_junc_frame.loc[ins_junc_frame['ROI'] == insertion, 'direction'].iloc[0]
 
         ase_bam = os.path.join(working_dir, f'{insertion}.trinity_in_sorted.ase.bam')
         if os.path.isfile(os.path.join(working_dir, f'trinity_out_{insertion}_ase.Trinity.fasta')):

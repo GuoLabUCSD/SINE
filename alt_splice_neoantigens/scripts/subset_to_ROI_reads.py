@@ -12,7 +12,7 @@ def nan_index(l, value):
             return i
     return -1
     
-def keep_insertion_reads_only(bampath, output_prefix, insertion):
+def keep_insertion_reads_only(bampath, output_prefix, insertion, junction = 'None'):
     '''
     bampath       : path to original bam
     output_prefix : prefix to save the stratified bams to. e.g. <output_dir>/prefix
@@ -26,6 +26,18 @@ def keep_insertion_reads_only(bampath, output_prefix, insertion):
     for i in range(start+1, end):
         middle_pos.append(i)
     used_mates = []
+    shared_coord = ''
+
+    #Optionally need to get junction coordinate info and what side of the insertion the junction is connected to
+    if junction != 'None':
+        junction = junction.split(':')[1]
+        j_start, j_end = junction.split('-')
+        j_start = int(j_start)-1      # zero based
+        j_end = int(j_end)-1          # zero based
+        if j_start == end:
+            shared_coord = j_start
+        if j_end == start:
+            shared_coord = j_end
     
     # load bam
     input_bam = pysam.AlignmentFile(bampath, 'rb')
@@ -41,6 +53,16 @@ def keep_insertion_reads_only(bampath, output_prefix, insertion):
             continue
 
         if start in read.positions or end in read.positions:
+            
+            #Optionally need to remove reads that span the region of interest, but not the junction
+            if shared_coord == j_end and (start-1) in read.positions:
+                continue
+            if shared_coord == j_end and (j_start+1) in read.positions:
+                continue
+            if shared_coord == j_start and (end+1) in read.positions:
+                continue
+            if shared_coord == j_start and (j_end-1) in read.positions:
+                continue
             
             insertion_read_start = nan_index(read.get_reference_positions(full_length=True), start)
             insertion_read_end = nan_index(read.get_reference_positions(full_length=True), end)
@@ -80,6 +102,7 @@ if __name__ == "__main__":
     path_args.add_argument('--input_bam_path', type=str, help='path to input bam', required=True)
     path_args.add_argument('--output_bam_prefix', type=str, help='prefix to save the stratified bams to. e.g. "<output_dir>/some_prefix"', required=True)
     path_args.add_argument("--insertion", type = str, help = "insertion e.g. chr1:111111-111113", required=True)
+    path_args.add_argument("--junction", type = str, help = "corresponding junction connected to the insertion", required = False)
 
     args = parser.parse_args()
 
@@ -90,5 +113,5 @@ if __name__ == "__main__":
     if os.path.isfile(args.output_bam_prefix):
         print('WARNING - {} will be overwrriten. Continuing..'.format(args.output_bam_prefix))
 
-    keep_insertion_reads_only(args.input_bam_path, args.output_bam_prefix, args.insertion)
+    keep_insertion_reads_only(args.input_bam_path, args.output_bam_prefix, args.insertion, args.junction)
 

@@ -31,7 +31,7 @@ args = parser.parse_args()
 insertion_df = pd.read_csv(args.insertion_file, sep='\t')
 
 
-def prepare_cmd(f, insertion):   
+def prepare_cmd(f, insertion, junction = 'None'):   
     f.write('echo " - {}"\n'.format(insertion))
     
     f.write(f'mkdir -p {args.work_dir}/{insertion}\n')
@@ -44,7 +44,7 @@ def prepare_cmd(f, insertion):
     f.write(f'samtools index {insertion}.trinity_in_prefilter.bam\n')
  
     # separate out reads with insertions together, just 5', or just 3'
-    f.write(f'python {args.pipeline_dir}/scripts/subset_to_ROI_reads.py --input_bam_path {insertion}.trinity_in_prefilter.bam --output_bam_prefix {insertion}.trinity_in --insertion {insertion}\n')
+    f.write(f'python {args.pipeline_dir}/scripts/subset_to_ROI_reads.py --input_bam_path {insertion}.trinity_in_prefilter.bam --output_bam_prefix {insertion}.trinity_in --insertion {insertion} --junction {junction}\n')
     
     # sort reads by name for bedtools
     f.write(f'samtools sort -n {insertion}.trinity_in.ase.bam > {insertion}.trinity_in_sorted.ase.bam\n')
@@ -101,8 +101,11 @@ if os.path.isfile(args.output_script_path):
 # create trinity commands
 with open(args.output_script_path, 'w') as f:
 
-    for _, row in insertion_df.iterrows():
-        prepare_cmd(f, row['ROI'])
+    if 'junction' in insertion_df.columns:
+        for _, row in insertion_df.iterrows():
+            prepare_cmd(f, row['ROI'], row['junction'])
 
-
+    else:
+        for _, row in insertion_df.iterrows():
+            prepare_cmd(f, row['ROI'])
 
