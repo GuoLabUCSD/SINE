@@ -93,12 +93,13 @@ echo "
 if [ -z $direct ]; then
 	expected_num=1
 else
-	expected_num=2
+	expected_num=3
 fi
 
 obs_num1=$(grep -Eo 'ROI' $insertion_file | uniq | wc -l)
-obs_num2=$(grep -Eo 'Direction' $insertion_file | uniq | wc -l)
-obs_num=$(($obs_num1 + $obs_num2))
+obs_num2=$(grep -Eo 'direction' $insertion_file | uniq | wc -l)
+obs_num3=$(grep -Eo 'junction' $insertion_file | uniq | wc -l)
+obs_num=$(($obs_num1 + $obs_num2 + $obs_num3))
 
 if [ $expected_num == $obs_num ]; then
 	echo "	- Insertions file appears to have all expected columns, continuing..."
