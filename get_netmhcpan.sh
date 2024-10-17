@@ -16,11 +16,12 @@ Arguments:
 -a      Filepath to a tab-separated text file of MHC alleles to check peptide binding against for each sample
 -s      Patient name to run netmhcpan on
 -p	Pipeline Directory
+-n	Run NetMHCpanII instead [OPTIONAL]
 EOF
   exit
 }
 
-while getopts "i:f:m:o:a:s:p:h" flag ; do
+while getopts "i:f:m:o:a:s:p:nh" flag ; do
 
         case "${flag}" in
                 i) isoforms_dir=${OPTARG};;
@@ -30,6 +31,7 @@ while getopts "i:f:m:o:a:s:p:h" flag ; do
                 a) allele_table=${OPTARG};;
                 s) patient_sample=${OPTARG};;
 		p) pipeline_directory=${OPTARG};;
+		n) net_two='Use_NetMHCIIpan_Instead';;
                 h) usage;;
         esac
 done
@@ -58,14 +60,11 @@ fi
 #Run Python Script
 echo "Running"
 
-python $pipeline_directory/supplemental/prepare_netmhcpan.py \
---isoforms_dir $isoforms_dir \
---output_directory_fastas $output_directory_fastas \
---output_directory_mapping $output_directory_mapping \
---netmhcpan_output_directory $netmhcpan_output_directory \
---allele_table $allele_table \
---patient_sample $patient_sample \
---pipeline_directory $pipeline_directory
+if [ -z $net_two ]; then
+	python $pipeline_directory/supplemental/prepare_netmhcpan.py --isoforms_dir $isoforms_dir --output_directory_fastas $output_directory_fastas --output_directory_mapping $output_directory_mapping --netmhcpan_output_directory $netmhcpan_output_directory --allele_table $allele_table --patient_sample $patient_sample --pipeline_directory $pipeline_directory
+else
+	python $pipeline_directory/supplemental/prepare_netmhcpan.py --isoforms_dir $isoforms_dir --output_directory_fastas $output_directory_fastas --output_directory_mapping $output_directory_mapping --netmhcpan_output_directory $netmhcpan_output_directory --allele_table $allele_table --patient_sample $patient_sample --pipeline_directory $pipeline_directory --net_two $net_two
+fi
 
 #Run Bash Script
 
