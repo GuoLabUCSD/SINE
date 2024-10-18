@@ -50,9 +50,7 @@ def prepare_cmd(f, insertion, junction = 'None'):
     f.write(f'samtools sort -n {insertion}.trinity_in.ase.bam > {insertion}.trinity_in_sorted.ase.bam\n')
 
     # convert to fastq
-    #f.write(f'bedtools bamtofastq -i {insertion}.trinity_in.ase.bam -fq {insertion}.trinity_in.ase.fq\n')
     f.write(f'bedtools bamtofastq -i {insertion}.trinity_in_sorted.ase.bam -fq {insertion}.trinity_in.ase.fq -fq2 {insertion}.trinity_in2.ase.fq\n')
-    # f.write(f'bedtools bamtofastq -i {insertion}.trinity_in.wildtype.bam -fq {insertion}.trinity_in.wildtype.fq\n\n')
 
     if args.read_boost:
         f.write(f'python {args.pipeline_dir}/scripts/read_booster.py --event_dir {args.work_dir}/{insertion} --read_boost {args.read_boost}\n')
@@ -62,24 +60,9 @@ def prepare_cmd(f, insertion, junction = 'None'):
     
     else:
         # only run trinity for bams with reads inside
-        #f.write(f'if [ -s {insertion}.trinity_in.ase.bam ]; then\n')
-        #f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --single {insertion}.trinity_in.ase.fq --max_memory 10G --output trinity_out_{insertion}_ase --min_contig_length 50 > /dev/null\n')
         f.write(f'if [ -s {insertion}.trinity_in_sorted.ase.bam ]; then\n')
         f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --left {insertion}.trinity_in.ase.fq --right {insertion}.trinity_in2.ase.fq --SS_lib_type RF --max_memory 10G --output trinity_out_{insertion}_ase --min_contig_length {args.contig_length} > /dev/null\n')
         f.write('fi\n')
-    
-    ### -- WE DON'T CARE ABOUT WILDTYPE HERE -- ##
-    # f.write(f'if [ -s {insertion}.trinity_in.wildtype.bam ]; then\n')
-    # f.write(f'\tsingularity exec -e {args.trinity_sif} Trinity --seqType fq --single {insertion}.trinity_in.wildtype.fq --max_memory 10G --output trinity_out_{insertion}_wildtype --min_contig_length 50 > /dev/null\n\n')
-    # f.write('fi\n')
-    ### -- WE DON'T CARE ABOUT WILDTYPE HERE -- ##
-    
-
-    # if bool(args.clean_intermediate_files):
-    #     f.write(f'rm {insertion}.trinity_in_prefilter.bam\n') 
-    #     f.write('rm *fq\n')
-    #     f.write(f'rm {insertion}.trinity_in.*bam\n\n')
-    
 
     return
 

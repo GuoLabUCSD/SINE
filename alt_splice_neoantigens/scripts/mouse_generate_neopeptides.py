@@ -156,12 +156,10 @@ def get_best_frame(seq, nt_pos, junction, std_thresh=10, verbose=False):
     rc_nt_pos = ((len(seq)-nt_pos[1])-1,(len(seq)-nt_pos[0])-1)
     
     enst_list = retrieve(slice_gtf(junction, gtf_path=args.gtf_path))
-    #print(enst_list)
     if verbose:
         print(enst_list)
     enst_list = [x for x in enst_list if x in CDS_dict]
     enst_list = sorted(enst_list)
-    #print(enst_list)
     if verbose:
         print('after filter:',enst_list)    
 

@@ -11,8 +11,6 @@ def slice_gtf(junction, gtf_path, save_dir='/tmp'):
                 # no colon in junction name for easier processing
                 junction = junction.replace(':','-')
                 savepath = os.path.join(save_dir, '{}.gtf'.format(junction))
-                #print(junction)
-                #print(savepath)
 
                 if os.path.isfile(savepath):
                         return savepath
