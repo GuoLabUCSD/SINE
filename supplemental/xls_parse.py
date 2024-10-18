@@ -15,6 +15,7 @@ args_path = parser.add_argument_group("Inputs:")
 args_path.add_argument('-i', '--netmhcpan_results_directory', type=str, required=True, help='Directory containing xls files with affinity results for all samples from netmhcpan')
 args_path.add_argument('-f', '--peptide_directory', type=str, required=True, help='Directory where peptide fasta files are stored from previous step')
 args_path.add_argument('-o', '--output_directory', type = str, required=True, help='Location to store phbr score results')
+args_path.add_argument('-n', '--net_two', type=str, required=False, help='Use NetMHCIIpan instead')
 
 args = parser.parse_args()
 
@@ -148,5 +149,8 @@ for i, patient in enumerate(patient_list):
     peptide_path = os.path.join(peptide_output_dir, '{}.peptides'.format(patient))
     xls_path_list = ','.join([os.path.join(xls_output_dir, x) for x in os.listdir(xls_output_dir) if x.split('.')[0] == patient])
 
-    get_pypresent_output(peptide_path, xls_path_list, output_path, affinity_col_base='EL_Rank')
+    if args.net_two:
+        get_pypresent_output(peptide_path, xls_path_list, output_path, affinity_col_base='Rank')
+    else:
+        get_pypresent_output(peptide_path, xls_path_list, output_path, affinity_col_base='EL_Rank')
 
