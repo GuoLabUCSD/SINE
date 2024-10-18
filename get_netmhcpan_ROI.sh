@@ -16,7 +16,7 @@ Arguments:
 -a      Filepath to a tab-separated text file of MHC alleles to check peptide binding against for each sample
 -s      Patient name to run netmhcpan on
 -p	Pipeline Directory
--n	Run NetMHCpanII instead [OPTIONAL]
+-n	Run NetMHCIIpan instead [OPTIONAL]
 EOF
   exit
 }
