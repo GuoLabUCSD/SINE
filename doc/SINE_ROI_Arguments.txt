@@ -42,7 +42,9 @@ get_netmhcpan_ROI.sh
 		-s
 			Name of the sample being analyzed
 		-p
-			Path to the SINE directory	
+			Path to the SINE directory
+		-n
+			Run NetMHCIIpan instead [OPTIONAL]	
 
 xls_parser.sh
  Arguments:
@@ -54,6 +56,8 @@ xls_parser.sh
 			Path to a directory to store newly parsed affinity files
 		-p
 			Path to the SINE directory
+		-n
+			Parse NetMHCIIpan results instead [OPTIONAL]
 
 get_phbr_ROI.sh
  Arguments:
