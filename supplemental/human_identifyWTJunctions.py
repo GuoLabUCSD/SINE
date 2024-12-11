@@ -12,7 +12,7 @@ sns.set_style('ticks')
 parser = argparse.ArgumentParser()
 args_path = parser.add_argument_group("Inputs:")
 
-args_path.add_argument('-i', '--junctions_list', type=str, required=True, help='Path to a new line separated text file with junction names. The header line should be "junction" and the junctions should be in "#:start-end" format where "#" is the mouse chromosome number, or X/Y.')
+args_path.add_argument('-i', '--junctions_list', type=str, required=True, help='Path to a new line separated text file with junction names. The header line should be "junction" and the junctions should be in "chr#:start-end" format where "#" is the human chromosome number, or X/Y.')
 args_path.add_argument('-b', '--STAR_directory', type=str, required=True, help='Path to the directory of STAR output (BAM + SJ.out.tab')
 args_path.add_argument('-w', '--STAR_directory_normal', type=str, required=True, help='Path to the directory of STAR output (BAM + SJ.out.tab) for the normal samples')
 args_path.add_argument('-o', '--output_directory', type=str, required=True, help='Location to store output files')
@@ -49,7 +49,7 @@ junc_df = junc_df[cols_of_interest]
 junc_df['chr_intron_start'] = junc_df.apply(lambda x: '{}_{}'.format(x['chr'], x['start_intron']), axis=1)
 junc_df['chr_intron_end'] = junc_df.apply(lambda x: '{}_{}'.format(x['chr'], x['end_intron']), axis=1)
 
-# load SJ.out.tab files from Tumor Mice
+# load SJ.out.tab files from Tumor Human
 # SJ.out.tab files are missing "chr" in front of the chromosome number in the first column, edit that here
 # SJ.out.tab files also contain un-needed junctions to be removed
 star_cols = ['chr','intron_start', 'intron_end','strand','intron_motif','in_annot_database','num_uniq_reads_at_junc','num_multi_reads_at_junc','max_spliced_overhang']
@@ -72,7 +72,7 @@ for patient in patient_list:
     star_df['patient'] = patient
     output_df = output_df.append(star_df)
 
-# load SJ.out.tab files from WT Mice and identify any WT junctions w/ a shared start|end 
+# load SJ.out.tab files from WT Human and identify any WT junctions w/ a shared start|end 
 # SJ.out.tab files are missing "chr" in front of the chromosome number in the first column, edit that here
 # SJ.out.tab files also contain un-needed junctions to be removed
 star_cols = ['chr','intron_start', 'intron_end','strand','intron_motif','in_annot_database','num_uniq_reads_at_junc','num_multi_reads_at_junc','max_spliced_overhang']
@@ -82,9 +82,6 @@ for patient in norm_patient_list:
     path = '{}/{}SJ.out.tab'.format(args.STAR_directory_normal, patient)
     star_df = pd.read_csv(path, sep='\t', header=None, low_memory = False)
     star_df.columns = star_cols
-    star_df = star_df[star_df["chr"].str.contains("JH") == False]
-    star_df = star_df[star_df["chr"].str.contains("GL") == False]
-    star_df = star_df[star_df["chr"].str.contains("MU") == False]
     #star_df['chr'] = 'chr' + star_df['chr']
     
     # identify shared start/end

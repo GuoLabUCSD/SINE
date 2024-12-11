@@ -9,7 +9,7 @@ This script will run a modified version of pypresent and parse the affinity resu
 
 Arguments:
 
--i      Path to a file of junctions
+-i      Path to directory containing NetMHCpan results in .xlsoutput format
 -f      Directory where peptide fasta files are stored per sample
 -o      Output Directory to store parsed affinity results
 -p	Pipeline Directory
