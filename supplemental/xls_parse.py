@@ -7,6 +7,7 @@ from collections import defaultdict
 from load_peptides import load_peptide_dict
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
+pd.options.mode.chained_assignment = None
 
 parser = argparse.ArgumentParser()
 args_path = parser.add_argument_group("Inputs:")
@@ -14,6 +15,7 @@ args_path = parser.add_argument_group("Inputs:")
 args_path.add_argument('-i', '--netmhcpan_results_directory', type=str, required=True, help='Directory containing xls files with affinity results for all samples from netmhcpan')
 args_path.add_argument('-f', '--peptide_directory', type=str, required=True, help='Directory where peptide fasta files are stored from previous step')
 args_path.add_argument('-o', '--output_directory', type = str, required=True, help='Location to store phbr score results')
+args_path.add_argument('-n', '--net_two', type=str, required=False, help='Use NetMHCIIpan instead')
 
 args = parser.parse_args()
 
@@ -121,6 +123,7 @@ def get_pypresent_output(peptide_filepath, xls_file_list, output_path, affinity_
     
     lowest_peptide_string = []
     for index, row in allele_br_output_df.iterrows():
+        #print(index)
         x = row['lowest_allele']
         lowest_peptide_string.append(row[x])
     allele_br_output_df['peptide'] = lowest_peptide_string
@@ -128,6 +131,8 @@ def get_pypresent_output(peptide_filepath, xls_file_list, output_path, affinity_
     allele_br_output_df = allele_br_output_df[allele_br_output_df.columns.drop(list(allele_br_output_df.filter(regex='_peptide')))]
     allele_br_output_df = allele_br_output_df.drop(['lowest_allele'], axis = 1)    
 
+    #allele_br_output_df.index = allele_br_output_df.index.astype(int)
+    #allele_br_output_df.sort_index()
     allele_br_output_df.to_csv(output_path, sep='\t')
     if output_pep_path:
         allele_br_pep_output_df.to_csv(output_pep_path, sep='\t')
@@ -144,5 +149,8 @@ for i, patient in enumerate(patient_list):
     peptide_path = os.path.join(peptide_output_dir, '{}.peptides'.format(patient))
     xls_path_list = ','.join([os.path.join(xls_output_dir, x) for x in os.listdir(xls_output_dir) if x.split('.')[0] == patient])
 
-    get_pypresent_output(peptide_path, xls_path_list, output_path, affinity_col_base='EL_Rank')
+    if args.net_two:
+        get_pypresent_output(peptide_path, xls_path_list, output_path, affinity_col_base='Rank')
+    else:
+        get_pypresent_output(peptide_path, xls_path_list, output_path, affinity_col_base='EL_Rank')
 

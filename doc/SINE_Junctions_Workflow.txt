@@ -1,0 +1,74 @@
+SINE Junctions Workflow
+•	A step-by-step walkthrough of how to run SINE based on a set of junctions of interest using the provided example dataset located in {../examples}.
+
+0. Install SINE using the README documentation to the location of your choice. For the purposes of this guide, the path to the SINE pipeline will be listed as {../SINE}
+
+1. Create a new directory to act as the SINE workspace
+	mkdir my_SINE_Experiment
+	cd my_SINE_Experiment
+
+2. In this workspace create the following output directories for subsequent steps
+	mkdir junction_files isoform_output isoform_output/tumors isoform_output/normals netmhcpan_analysis netmhcpan_analysis/fastas netmhcpan_analysis/patient_files_w_id mhcpan_results parsed_files final_results
+
+3. To compare the binding affinity scores potential neoantigens from alternatively spliced junctions; SINE uses a directory of normal samples to determine what the “wild-type” junction would be instead. Using the get_wt.sh script, we will define “wild-type” junctions as the most commonly expressed junction in the normal samples that shares a start or end site with each junction of interest. This step will then produce an individual junction of interest tsv file to be analyzed for every tumor and normal sample in the specified output directory.
+	../SINE/get_wt.sh \ 
+	-i ../SINE/examples/junctions_list.txt \
+	-b ../SINE/examples/tumors \
+	-w ../SINE/examples/normals \
+	-n example_experiment \
+	-o junction_files \
+	-p ../SINE \
+	-m
+
+4. For the tumor samples; extract reads from the BAM file that span the junction of interest, perform Trinity De novo assembly, translate all reading frames of the present isoforms, and select the translation with the best alignment to the reference coding sequences. This function is written to be run one sample at a time, so it is recommended to perform this step in parallel on a cluster for all tumor samples if the experiment. Annotation files for this step can be downloaded from Ensembl.
+	wget https://ftp.ensembl.org/pub/release-111/fasta/mus_musculus/cds/Mus_musculus.GRCm39.cds.all.fa.gz
+	wget https://ftp.ensembl.org/pub/release-111/gtf/mus_musculus/Mus_musculus.GRCm39.111.gtf.gz
+	../SINE/main.sh \
+	-b ../SINE/examples/Tumor_BAM_File_Directory/tumor1Aligned.sortedByCoord.out.bam \
+	-j junction_files/tumor1_junctions.tsv \
+	-g Mus.musculus.GRCm39.107.gtf \
+	-f Mus_musculus.GRCm39.cds.all.fa \
+	-t ../trinity_installation_folder/trinityrnaseq.v2.15.1.simg \
+	-o isoform_output/tumors \
+	-p ../SINE \
+	-s tumor1 \
+	-m
+
+5. Repeat the above step for the normal samples.
+	../SINE/main.sh \
+	-b ../SINE/examples/Normal_BAM_File_Directory/normal1Aligned.sortedByCoord.out.bam \
+	-j junction_files/normal1_junctions.tsv \
+	-g Mus.musculus.GRCm39.107.gtf \
+	-f Mus_musculus.GRCm39.cds.all.fa \
+	-t ../trinity_installation_folder/trinityrnaseq_latest.sif \
+	-o isoform_output/normals \
+	-p ../SINE \
+	-s normal1 \
+	-m
+
+6. Prep and Run NetMHCPan to get peptide binding affinity scores to MHC class I for every junction spanning kmer (size 8-11) for the tumor samples. SINE will automatically use the kmers found in the normal samples to detect their theoretical binding affinity in the tumors. All junction spanning kmers/peptides will also be stored as fasta files located in a newly created netmhcpan_analysis/fastas/mhc_i directory to be used in subsequent steps. It is recommended to run this in parallel on a cluster for all samples in the experiment.
+	../SINE/get_netmhcpan.sh \
+	-i isoform_output \
+	-a ../SINE/examples/mhc_allele_table.txt \ 
+	-f netmhcpan_analysis/fastas \
+	-m netmhcpan_analysis/patient_files_w_id \
+	-o mhcpan_results \
+	-s tumor1 \
+	-p ../SINE
+
+7. Parse the NetMHCpan .xls results files using the modified version of PyPresent. This will output a table of netmhcpan scores per event along with the strongest binding peptide/kmer present using the mhc_i fasta directory created in the previous step.
+	../SINE/xls_parser.sh \
+	-i mhcpan_results \
+	-f netmhcpan_analysis/fastas/mhc_i \
+	-o parsed_files \
+	-p ../SINE 
+
+8. Calculate the PHBR score for each peptide and the corresponding wild-type junction where available and output results tables.
+	../SINE/get_phbr.sh \
+	-i isoform_output \
+	-j junction_files/example_experiment_junctionsOfInterest_plusWT.tsv \
+	-a parsed_files \
+	-m netmhcpan_analysis/patient_files_w_id \
+	-t example_experiment_ase_wt_pairs.tsv \
+	-o final_results \
+	-p ../SINE

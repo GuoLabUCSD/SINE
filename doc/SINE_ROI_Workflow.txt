@@ -1,0 +1,50 @@
+SINE for Region of Interest (ROI) Workflow:
+•	A step-by-step walkthrough of how to run SINE based on a set of general regions of interest using the provided example dataset located in {../examples}.
+
+0. Install SINE using the README documentation to the location of your choice. For the purposes of this guide, the path to the SINE pipeline will be listed as {../SINE}
+
+1. Create a new directory to act as the SINE workspace
+	mkdir my_SINE_Experiment
+	cd my_SINE_Experiment
+
+2. In this workspace create the following output directories for subsequent steps
+	mkdir isoform_output isoform_output/tumors netmhcpan_analysis netmhcpan_analysis/fastas netmhcpan_analysis/patient_files_w_id mhcpan_results parsed_files final_results
+
+3. For the tumor samples; extract reads from the BAM file that span the region of interest, perform Trinity De novo assembly, translate all reading frames of the present isoforms, and select the translation with the best alignment to the reference coding sequences. This function is written to be run one sample at a time, so it is recommended to perform this step in parallel on a cluster for all tumor samples if the experiment. Annotation files for this step can be downloaded from Ensembl.
+	wget https://ftp.ensembl.org/pub/release-111/fasta/mus_musculus/cds/Mus_musculus.GRCm39.cds.all.fa.gz
+	wget https://ftp.ensembl.org/pub/release-111/gtf/mus_musculus/Mus_musculus.GRCm39.111.gtf.gz
+	../SINE/main_ROI.sh \
+	-b ../SINE/examples/tumors/tumor1Aligned.sortedByCoord.out.bam \
+	-j ../examples/regions_list.txt \
+	-g Mus.musculus.GRCm39.107.gtf \
+	-f Mus_musculus.GRCm39.cds.all.fa \
+	-t ../trinity_installation_folder/trinityrnaseq.v2.15.1.simg \
+	-o isoforms_output/tumors \
+	-p ../SINE \
+	-s tumor1 \
+	-m
+
+4. Prep and Run NetMHCPan to get peptide binding affinity scores to MHC class I for every ROI spanning kmer (size 8-11) for the tumor samples. All region spanning kmers/peptides will also be stored as fasta files located in a newly created netmhcpan_analysis/fastas/mhc_i directory to be used in subsequent steps. It is recommended to run this in parallel on a cluster for all samples in the experiment.
+	../SINE/get_netmhcpan_ROI.sh \
+	-i isoform_output \
+	-a ../SINE/examples/mhc_allele_table.txt \ 
+	-f netmhcpan_analysis/fastas \
+	-m netmhcpan_analysis/patient_files_w_id \
+	-o mhcpan_results \
+	-s tumor1 \
+	-p ../SINE
+
+5. Parse the NetMHCpan .xls results files using the modified version of PyPresent. This will output a table of netmhcpan scores per event along with the strongest binding peptide/kmer present using the mhc_i fasta directory created in the previous step.
+	../SINE/xls_parser.sh \
+	-i mhcpan_results \
+	-f netmhcpan_analysis/fastas/mhc_i \
+	-o parsed_files \
+	-p ../SINE
+
+6. Calculate the PHBR score for each peptide and output results tables.
+	../SINE/get_phbr_ROI.sh 
+	-i isoform_output \
+	-a parsed_files \
+	-m netmhcpan_analysis/patient_files_w_id \
+	-o final_results \
+	-p ../SINE

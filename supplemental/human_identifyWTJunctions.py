@@ -29,8 +29,6 @@ junc_df = junc_df.astype({"start":"int","end":"int"})
 junc_df['start_intron'] = junc_df['start'] + 1
 junc_df['end_intron'] = junc_df['end'] - 1
 junc_df = junc_df.astype({"start":"str","end":"str", "start_intron":"str", "end_intron":"str"})
-print(junc_df.shape)
-junc_df.head(10)
 
 # get tumor bams to do
 bam_list = os.listdir('{}'.format(args.STAR_directory))

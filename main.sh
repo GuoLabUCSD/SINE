@@ -23,12 +23,15 @@ Available options:
 -t    path to trinity singularity/apptainer image [REQUIRED]
 -o    output directory [REQUIRED]
 -p    pipeline directory [REQUIRED]
+-s    sample_name [REQUIRED]
+-l    integer specifying the minimum contig length for Trinity Fasta Output [OPTIONAL]
+-r    integer specifying the factor with which to duplicate the number of reads by [OPTIONAL]
 -m    data is from a mouse genome [OPTIONAL]
 EOF
   exit
 }
-
-while getopts "b:j:g:f:t:p:o:mh" flag ; do
+contig_length=100
+while getopts "b:j:g:f:t:o:p:s:l::r::mh" flag ; do
 
 	case "${flag}" in
 		b) tumor_rna_bam=${OPTARG};;
@@ -38,13 +41,16 @@ while getopts "b:j:g:f:t:p:o:mh" flag ; do
 		t) trinity_image=${OPTARG};;
 		p) pipeline_dir=${OPTARG};;
 		o) output_dir=${OPTARG};;
+		s) sample_name=${OPTARG};;
+		l) contig_length=${OPTARG};;
+		r) read_boost=${OPTARG};;
 		m) mouse='This_is_a_Mouse_Genome';;
 		h) usage;;
 	esac
 done
 
 # check required args are given
-if [ -z $tumor_rna_bam ] || [ -z $junction_file ] || [ -z $output_dir ] || [ -z $pipeline_dir ] || [ -z $gtf_file ] || [ -z $trinity_image ] || [ -z $cds_fasta_file ]; then
+if [ -z $tumor_rna_bam ] || [ -z $junction_file ] || [ -z $output_dir ] || [ -z $pipeline_dir ] || [ -z $gtf_file ] || [ -z $trinity_image ] || [ -z $cds_fasta_file ] || [ -z $sample_name ]; then
 	echo "the default pipeline requires a tumor RNAseq bam pair, a junctions file, a designated output directory, a gtf file, the CDS fasta file, the trinity image, and the pipeline directory. Exiting..."
 	usage
 	exit 1
@@ -113,13 +119,12 @@ echo "
 
 # make intermediate results dir
 
-python $pipeline_dir/alt_splice_neoantigens/scripts/prepare_trinity_scripts.py \
---bam_filepath $tumor_rna_bam \
---junction_file $junction_file \
---output_script_path $output_dir/$rna_genome_basename.identify_junctions.sh \
---work_dir $output_dir/intermediate_results \
---trinity_sif $trinity_image \
---pipeline_dir $pipeline_dir/alt_splice_neoantigens
+if [ -z $read_boost ]; then
+	python $pipeline_dir/alt_splice_neoantigens/scripts/prepare_trinity_scripts.py --bam_filepath $tumor_rna_bam --junction_file $junction_file --output_script_path $output_dir/$rna_genome_basename.identify_junctions.sh --work_dir $output_dir/intermediate_results --trinity_sif $trinity_image --contig_length $contig_length --pipeline_dir $pipeline_dir/alt_splice_neoantigens
+
+else
+	python $pipeline_dir/alt_splice_neoantigens/scripts/prepare_trinity_scripts.py --bam_filepath $tumor_rna_bam --junction_file $junction_file --output_script_path $output_dir/$rna_genome_basename.identify_junctions.sh --work_dir $output_dir/intermediate_results --trinity_sif $trinity_image --contig_length $contig_length --pipeline_dir $pipeline_dir/alt_splice_neoantigens --read_boost $read_boost
+fi
 
 echo "
 ##################################
@@ -135,11 +140,7 @@ echo "
 ###################################
 "
 if [ -z $mouse ]; then
-	python $pipeline_dir/alt_splice_neoantigens/scripts/human_generate_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file
+	python $pipeline_dir/alt_splice_neoantigens/scripts/human_generate_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file -s $sample_name -b $tumor_rna_bam
 else
-	python $pipeline_dir/alt_splice_neoantigens/scripts/mouse_generate_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file
+	python $pipeline_dir/alt_splice_neoantigens/scripts/mouse_generate_neopeptides.py -i $output_dir/intermediate_results/ -G $gtf_file -F $cds_fasta_file -s $sample_name -b $tumor_rna_bam
 fi
-
-
-
-

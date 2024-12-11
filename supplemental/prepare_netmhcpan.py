@@ -16,6 +16,7 @@ args_path.add_argument('-o', '--netmhcpan_output_directory', type=str, required=
 args_path.add_argument('-a', '--allele_table', type=str, required=True, help='Filepath to a tab-separated text file of MHC alleles to check peptide binding against for each sample')
 args_path.add_argument('-s', '--patient_sample', type=str, required=True, help='Patient name to run netmhcpan on. Ie) Sample Directory name in the isoforms directory')
 args_path.add_argument('-p', '--pipeline_directory', type=str, required=True, help='Directory to the pipeline')
+args_path.add_argument('-n', '--net_two', type=str, required=False, help='Use NetMHCIIpan instead')
 
 args = parser.parse_args()
 
@@ -35,6 +36,30 @@ def create_peptides(mhc, short_seq, junc_aa_pos):
                 peptides.append(short_seq[start:end])
     return peptides
 
+#Concatenate the WT junction peptides found in the normals all together
+path = '{}'.format(args.isoforms_dir)
+norm_path = os.path.join(path, 'normals')
+full_wt_peptides = pd.DataFrame(columns = ['isoform', 'isoform_num', 'junc_aa_pos', 'peptides', 'junction', 'frame_selection'])
+for normal in os.listdir(norm_path):
+    wt_peptides_path = os.path.join(norm_path, normal, 'intermediate_results', 'neopeptides.tsv')
+    peps = pd.read_csv(wt_peptides_path, sep = '\t')
+    full_wt_peptides = full_wt_peptides.append(peps)
+full_wt_peptides = full_wt_peptides.drop_duplicates(subset = ['isoform', 'junc_aa_pos', 'peptides', 'junction', 'frame_selection'])
+full_wt_peptides = full_wt_peptides.reset_index(drop = True)
+
+#Concatenate this new master list of normal peptides to the neopeptides.tsv files (might as well save it as a new file) for each sample
+tum_path = os.path.join(path, 'tumors')
+for tumor in os.listdir(tum_path):
+    tum_peptides_path = os.path.join(tum_path, tumor, 'intermediate_results', 'neopeptides.tsv')
+    intermediate_dir = os.path.join(tum_path, tumor, 'intermediate_results')
+    try:
+        t_peps = pd.read_csv(tum_peptides_path, sep = '\t')
+    except:
+        t_peps = pd.DataFrame(columns = ['isoform', 'isoform_num', 'junc_aa_pos', 'peptides', 'junction', 'frame_selection'])
+    t_peps = t_peps.append(full_wt_peptides)
+    t_peps = t_peps.reset_index(drop = True)
+    t_peps.to_csv('{}/all_peptides.tsv'.format(intermediate_dir), sep = '\t', index = False)
+
 # Create input for pyprsent pipeline
 # fasta of isoforms for NetMHCpan input
 # peptides spanning the junction to subset NetMHCpan output to peptides of interest
@@ -47,7 +72,7 @@ maf_dir = '{}'.format(args.output_directory_mapping)
 patient = '{}'.format(args.patient_sample)
     
 # read neopeptides.tsv file
-path = os.path.join(output_dir, patient, 'intermediate_results', 'neopeptides.tsv')
+path = os.path.join(output_dir, 'tumors', patient, 'intermediate_results', 'all_peptides.tsv')
 df = pd.read_csv(path, sep='\t')
 df = df.dropna(subset=['isoform'])
 df['junc_aa_pos'] = df['junc_aa_pos'].apply(literal_eval)
@@ -98,12 +123,20 @@ mhcI_type_df = pd.read_csv('{}'.format(args.allele_table), sep='\t', index_col=0
 
 todo_i_allele = (','.join(mhcI_type_df.loc[patient].values))
 
+if args.net_two:
+    todo_i_allele_list = todo_i_allele.split(',')
+    todo_i_allele_list = list(set(todo_i_allele_list))
+    todo_i_allele = ','.join(todo_i_allele_list)
+
 # create bash script to run netmhcpan for the given sample
 def create_cluster_script(patient, todo_i_allele):
 
     with open('{}/supplemental/temp_files/{}_netmhcpan.sh'.format(args.pipeline_directory, patient), 'w') as out_file:
         out_file.write("#! /bin/bash\n")
         # Run netmhcpan
-        out_file.write('netMHCpan -a {} -f {}/mhc_i/{}.fasta -xls -xlsfile {}/{}.xlsoutput > /dev/null'.format(todo_i_allele, args.output_directory_fastas, patient, args.netmhcpan_output_directory, patient))
+        if args.net_two:
+            out_file.write('netMHCIIpan -a {} -f {}/mhc_ii/{}.fasta -xls -xlsfile {}/{}.xlsoutput > /dev/null'.format(todo_i_allele, args.output_directory_fastas, patient, args.netmhcpan_output_directory, patient))
+        else:
+            out_file.write('netMHCpan -a {} -f {}/mhc_i/{}.fasta -xls -xlsfile {}/{}.xlsoutput > /dev/null'.format(todo_i_allele, args.output_directory_fastas, patient, args.netmhcpan_output_directory, patient))
         
 create_cluster_script(patient, todo_i_allele)

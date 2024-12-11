@@ -6,9 +6,12 @@ from Bio.SeqIO import parse
 from Bio.Seq import reverse_complement, translate
 import sys
 from _load_seq_dict import load_CDS_dict
+from _load_junction_strand import get_junc_strand
 from mouse_slice_retrieve_gtf import *
 import pysam
-from Bio import pairwise2 
+from Bio import pairwise2
+import warnings
+warnings.simplefilter(action='ignore',category=FutureWarning) 
 
 def get_consensus_seqs(c_path, kept_reads, junc_positions, junction, verbose=False):
 
@@ -54,7 +57,6 @@ def get_consensus_seqs(c_path, kept_reads, junc_positions, junction, verbose=Fal
     return junc_pos_list, consensus_seq_list
 
 
-
 def nan_index(l, value):
     '''
     l: list,
@@ -64,6 +66,7 @@ def nan_index(l, value):
         if value==item:
             return i
     return -1
+
 def get_junction_read_pos(reads, junction):
     '''Given pysam AlignedSegments return all reads with junction and what position it is in the read'''
     start = int(junction.split(':')[1].split('-')[0])-1      # zero based
@@ -77,7 +80,7 @@ def get_junction_read_pos(reads, junction):
             s = reverse_complement(read.get_forward_sequence()) if read.is_reverse else read.get_forward_sequence()
 
             kept_reads.append(s)
-            junction_pos_in_reads.append((nan_index(read.positions, start), nan_index(read.positions, end)))
+            junction_pos_in_reads.append((nan_index(read.get_reference_positions(full_length=True), start), nan_index(read.get_reference_positions(full_length=True), end)))
             
     return kept_reads, junction_pos_in_reads
 
@@ -105,35 +108,6 @@ def create_peptides_from_read(protein_seq, junc_aa_pos, mhc):
         return peptides
     else:
         return None
-
-def create_peptides_from_consensus(consensus_seq_list, junc_pos_list, junction, verbose=False):
-    '''
-    Depending on junction location, create peptides
-        - start,nan : from start to end of consensus
-        - nan, end  : from start of consensus to end
-        - start, end: (where start+1=end) +/- buffer spanning junction
-    '''
-    total_pep_list = []
-    alignment_scores = []
-    frame_list = []
-    selection_criteria_list = []
-    for i, consensus_seq in enumerate(consensus_seq_list):
-        junc_nt_pos = junc_pos_list[i]
-
-        frame, junc_aa, all_alignment_scores, selection_criteria = get_best_frame(consensus_seq, junc_nt_pos, junction)
-        if verbose:
-            print(selection_criteria)
-
-        if frame and junc_aa:
-            peptides = create_peptides_from_read(frame, junc_aa, mhc='II')
-            total_pep_list.append(peptides)
-        else:
-            total_pep_list.append(None)
-        alignment_scores.append(all_alignment_scores)
-        frame_list.append(frame)
-        selection_criteria_list.append(selection_criteria)
-    return total_pep_list, frame_list, alignment_scores, selection_criteria_list
-
 
 def create_peptides_from_consensus(consensus_seq_list, junc_pos_list, junction, verbose=False):
     '''
@@ -179,21 +153,31 @@ def get_best_frame(seq, nt_pos, junction, std_thresh=10, verbose=False):
     
     # check reverse complement too
     rc = reverse_complement(seq)
-    rc_nt_pos = (len(seq)-nt_pos[1],len(seq)-nt_pos[0])
+    rc_nt_pos = ((len(seq)-nt_pos[1])-1,(len(seq)-nt_pos[0])-1)
     
     enst_list = retrieve(slice_gtf(junction, gtf_path=args.gtf_path))
-    #print(enst_list)
     if verbose:
         print(enst_list)
     enst_list = [x for x in enst_list if x in CDS_dict]
-    #print(enst_list)
+    enst_list = sorted(enst_list)
     if verbose:
         print('after filter:',enst_list)    
+
+    #Get Junction Strand Info
+    junc_strand = get_junc_strand(args.tumor_rna_bam, args.sample_name, junction)
+
     for enst in enst_list:
         ref_seq = translate(CDS_dict[enst]) # include stop codons 
         
-        # for all 6 frames check best transcript alignment
-        for c in [(rc, rc_nt_pos), (seq, nt_pos)]: 
+        # check strand info, if junction is forward stranded use forward translation frames, reverse stranded used the reverse compliment frames, undefined checks all
+        if junc_strand == str(1):
+            seqs2do = [(seq, nt_pos)]
+        elif junc_strand == str(2):
+            seqs2do = [(rc, rc_nt_pos)]
+        elif junc_strand == str(0):
+            seqs2do = [(rc, rc_nt_pos), (seq, nt_pos)]
+
+        for c in seqs2do: 
             temp_seq, temp_nt_pos = c
             
             for i in range(3):
@@ -217,18 +201,24 @@ def get_best_frame(seq, nt_pos, junction, std_thresh=10, verbose=False):
                 aa_pos_list.append(((temp_nt_pos[0]-i)//3, (temp_nt_pos[1]-i)//3)) # nan will remain nan
                 output_enst_list.append(enst)
 
-
-
     if len(alignment_scores)==0:
         return None, None, None, None
     best_frame = np.argmax(alignment_scores)
+    
+    id2find = output_enst_list[best_frame]
+
+    if strand_dict[id2find] == str(1) and junc_strand == str(1):
+        strand_file.write('{}\t{}\t{}\tForward_MATCH\n'.format(id2find, gene_dict[id2find], junction))
+    if strand_dict[id2find] == str(-1) and junc_strand == str(2):
+        strand_file.write('{}\t{}\t{}\tReverse_MATCH\n'.format(id2find, gene_dict[id2find], junction))
+    if strand_dict[id2find] == str(1) and junc_strand != str(1):
+        strand_file.write('{}\t{}\t{}\tMISMATCH\n'.format(id2find, gene_dict[id2find], junction))
+    if strand_dict[id2find] == str(-1) and junc_strand != str(2):
+        strand_file.write('{}\t{}\t{}\tMISMATCH\n'.format(id2find, gene_dict[id2find], junction))
+
+    gene_file.write('{}\t{}\n'.format(junction, gene_dict[id2find]))
 
     return translated_seq_frame_list[best_frame], aa_pos_list[best_frame], alignment_scores, output_enst_list[best_frame]
-
-
-
-
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -243,16 +233,28 @@ if __name__ == "__main__":
         help='Path to GTF file used to grab all ENST IDs overlapping the junction genomic positions')
     path_args.add_argument('-F', '--cds_fasta_file', type=str, required=True,
         help='Path to the cds FASTA file')
+    path_args.add_argument('-s', '--sample_name', type=str, required=True,
+        help='Name of the Sample Being Run')
+    path_args.add_argument('-b', '--tumor_rna_bam', type=str, required=True,
+        help='RNA BAM File Path')
    
     args = parser.parse_args()
 
     # check args are good
     assert os.path.isdir(args.intermediate_results)
-    CDS_dict = load_CDS_dict(args.cds_fasta_file)    
+    get_CDS_info = load_CDS_dict(args.cds_fasta_file)
+    CDS_dict = get_CDS_info[0]
+    strand_dict = get_CDS_info[1] 
+    gene_dict = get_CDS_info[2]
 
     # final neopeptide output file for all junctions
     total_peptide_df = pd.DataFrame()
 
+    # create a text file where flagging mismatching gene and junction strand direction
+    strand_file = open(args.intermediate_results + '/strand_flags.txt', 'w')
+    gene_file = open(args.intermediate_results + '/gene_mappings.txt', 'w')
+    strand_file.write('CDS_Gene\tSymbol\tJunction\tFlag\n')
+    gene_file.write('Junction\tSymbol\n')
 
     for junction_folder in os.listdir(args.intermediate_results):
         working_dir = os.path.join(args.intermediate_results, junction_folder)
@@ -261,11 +263,14 @@ if __name__ == "__main__":
             continue
 
         junction = str(junction_folder)
-        ase_bam = os.path.join(working_dir, f'{junction}.trinity_in.ase.bam')
-        ase_trinity_fasta = os.path.join(working_dir, f'trinity_out_{junction}_ase', 'Trinity.fasta')
+        ase_bam = os.path.join(working_dir, f'{junction}.trinity_in_sorted.ase.bam')
+        if os.path.isfile(os.path.join(working_dir, f'trinity_out_{junction}_ase.Trinity.fasta')):
+            ase_trinity_fasta = os.path.join(working_dir, f'trinity_out_{junction}_ase.Trinity.fasta')
+        else:
+            ase_trinity_fasta = os.path.join(working_dir, f'trinity_out_{junction}_ase', 'Trinity.fasta')
         
-        wt_bam = os.path.join(working_dir, f'{junction}.trinity_in.wildtype.bam')
-        wt_trinity_fasta = os.path.join(working_dir, f'trinity_out_{junction}_wildtype','Trinity.fasta')
+        #wt_bam = os.path.join(working_dir, f'{junction}.trinity_in.wildtype.bam')
+        #wt_trinity_fasta = os.path.join(working_dir, f'trinity_out_{junction}_wildtype','Trinity.fasta')
 
         if not os.path.isfile(ase_bam):
             print(f'\t-{ase_bam} does not exist. Skipping..')
@@ -305,7 +310,9 @@ if __name__ == "__main__":
             total_peptide_df = peptide_df.copy()
         else:
             total_peptide_df = total_peptide_df.append(peptide_df)
-
+    
+    strand_file.close()
+    gene_file.close()
     savepath = os.path.join(args.intermediate_results, 'neopeptides.tsv')
     total_peptide_df.to_csv(savepath, sep='\t', index=False)
 

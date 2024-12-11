@@ -22,22 +22,37 @@ def keep_junction_reads_only(bampath, output_prefix, junction):
     start, end = junction.split('-')
     start = int(start)-1      # zero based
     end = int(end)-1          # zero based
+    used_mates = []
     
     # load bam
     input_bam = pysam.AlignmentFile(bampath, 'rb')
     ase_bam = pysam.AlignmentFile(f'{output_prefix}.ase.bam', 'wb', template=input_bam)
 
     # check every read
+    # write the read mate to the same file and skip the read if the mate has already been written
     for read in input_bam:
+
+        read_header = str(read)
+
+        if read_header in used_mates:
+            continue
 
         if start in read.positions and end in read.positions:
             
-            junc_read_start = nan_index(read.positions, start)
-            junc_read_end = nan_index(read.positions, end)
+            junc_read_start = nan_index(read.get_reference_positions(full_length=True), start)
+            junc_read_end = nan_index(read.get_reference_positions(full_length=True), end)
             
             # check if read spans AS junction
+            # if read mate is unmapped, skip to the next read
             if junc_read_start != -1 and junc_read_end != -1 and junc_read_start+1 == junc_read_end:
-                ase_bam.write(read)
+                try:
+                    read_mate = input_bam.mate(read)
+                    ase_bam.write(read)
+                    ase_bam.write(read_mate)
+                    mate_header = str(read_mate)
+                    used_mates.append(mate_header)
+                except:
+                    continue
 
 
     # save output bams 

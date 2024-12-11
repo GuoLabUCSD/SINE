@@ -13,17 +13,19 @@ Arguments:
 -f      Directory where peptide fasta files are stored per sample
 -o      Output Directory to store parsed affinity results
 -p	Pipeline Directory
+-n	Parse NetMHCIIpan results instead [OPTIONAL]
 EOF
   exit
 }
 
-while getopts "i:f:o:p:h" flag ; do
+while getopts "i:f:o:p:nh" flag ; do
 
         case "${flag}" in
                 i) netmhcpan_results_directory=${OPTARG};;
                 f) peptide_directory=${OPTARG};;
                 o) output_directory=${OPTARG};;
 		p) pipeline_directory=${OPTARG};;
+		n) net_two='Use_NetMHCIIpan_instead';;
                 h) usage;;
         esac
 done
@@ -42,7 +44,9 @@ fi
 #Run Python Script
 echo "Running"
 
-python $pipeline_directory/supplemental/xls_parse.py \
---netmhcpan_results_directory $netmhcpan_results_directory \
---peptide_directory $peptide_directory \
---output_directory $output_directory
+if [ -z $net_two ]; then
+	python $pipeline_directory/supplemental/xls_parse.py --netmhcpan_results_directory $netmhcpan_results_directory --peptide_directory $peptide_directory --output_directory $output_directory
+else
+	 python $pipeline_directory/supplemental/xls_parse.py --netmhcpan_results_directory $netmhcpan_results_directory --peptide_directory $peptide_directory --output_directory $output_directory --net_two $net_two
+fi
+

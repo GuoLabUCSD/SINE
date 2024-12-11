@@ -1,0 +1,73 @@
+SINE Regions of Interest (ROI) Arguments:
+
+main_ROI.sh	
+ Arguments:
+		-b
+			Path to Tumor RNA BAM file aligned to the genome for a single sample
+		-j
+			New line separated list of regions of interest to evaluate. Column header line should begin with “ROI”
+		-g
+			Path to GTF annotation file
+		-f
+			Path to CDS fasta file
+		-t
+			Path to Trinity Singularity/Apptainer Image
+		-o
+			Path to ouput directory where results should be stored
+		-p
+			Path to the SINE directory
+		-s
+			Name of the sample being analyzed
+		-l
+			Integer specifying the minimum contig length for Trinity Fasta Output [OPTIONAL]
+		-d
+			Regions of interest file also contains a column named “direction” with the corresponding strand direction (F: Forward, R: Reverse, U: Unknown) of each region and a column named "junction" with a corresponding junction that connects to the region [Optional]
+		-r
+			Integer specifying a multiplication factor for read duplication. In cases where Trinity is not able to assemble an isoform due to a lack of junction/ROI users are able to duplicate the total number of reads by this factor if desired. WARNING: Doing so will increase the false positive rate of an actual event. Additionally, users should be aware of the potential increase in runtime and diskspace required when using this argument [Optional]
+   		-m
+     			Data is from a mouse genome [Optional]
+
+get_netmhcpan_ROI.sh
+ Arguments:
+		-i
+			Path to a directory with a tumor subdirectory that contains isoform results from main_ROI.sh
+		-f
+			Path to an output directory to store fasta files of isoforms
+		-m
+			Path to an output directory to store isoform to NetMHCpan ID mapping files
+		-o
+			Path to an output directory to store NetMHCpan xlsoutput results
+		-a
+			Path to a tab-separated text file of MHC alleles to check peptide binding against for the sample. See {../examples/mhc_allele_table.txt} to see how the allele table should be formatted.
+		-s
+			Name of the sample being analyzed
+		-p
+			Path to the SINE directory
+		-n
+			Run NetMHCIIpan instead [OPTIONAL]	
+
+xls_parser.sh
+ Arguments:
+		-i
+			Path to a directory of NetMHCpan xlsoutput results files
+		-f
+			Path to the mhc_i subdirectory of fasta files containing the isoforms. The mhc_i subdirectory is located in the fasta output directory from get_netmhcpan_ROI.sh
+		-o
+			Path to a directory to store newly parsed affinity files
+		-p
+			Path to the SINE directory
+		-n
+			Parse NetMHCIIpan results instead [OPTIONAL]
+
+get_phbr_ROI.sh
+ Arguments:
+		-i
+			Path to a directory of isoforms generated from main_ROI.sh
+		-a
+			Path to a directory of allele affinity scores. The output directory from xls_parser.sh is the input directory here
+		-m
+			Path to a directory containing sample files with mapping IDs
+   		-o
+			Path to a directory to store the results tables
+		-p
+			Path to the SINE directory
