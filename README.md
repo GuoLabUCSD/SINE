@@ -1,5 +1,5 @@
 # SINE:
-SINE (Splice Isoform Neoantigen Evaluator) aims to identify potential neoantigens produced as a result of aberrant alternative splicing in tumor tissue and calculate their PHBR binding affinity score through the use of Trinity, netMHCpan, user-provided junctions/regions of interest, and sample BAM files.
+SINE (Splice Isoform Neoantigen Evaluator) aims to identify potential neoantigens produced as a result of aberrant alternative splicing in tumor tissue and calculate their PHBR binding affinity score through the use of Trinity, netMHCpan, user-provided junctions/regions of interest, and sample BAM files. For a full tutorial and list of arguments to be used with SINE, please see the documentation here: https://github.com/GuoLabUCSD/SINE/tree/main/doc
 
 
 ## Pre-Requisites:
