@@ -1,6 +1,6 @@
 SINE Outputted Files
 
-1. get_wt.sh:
+1. initialize.sh:
 •	{Tumor_Sample_Name}_junctions.tsv:
 		New-line separated list of junctions of interest per individual tumor sample
 
@@ -11,7 +11,7 @@ SINE Outputted Files
 		Table of junctions of interest and their corresponding wild-type junction for all samples with relevant data extracted from STAR's SJ.out.tab files
 
 •	{Filename_Prefix}_ase_wt_pairs.tsv:
-		Table of alternatively spliced junctions of interest and their found wild-type pairing where possible
+		Table of alternatively spliced junctions of interest and their found wild-type pairing where possible. If no normal samples were provided, the WT column will only contain NaN values.
 
 2. main.sh / main_ROI.sh
 •	../{isoforms_output_directory}/{Sample_Name/} Directory containing:
@@ -27,7 +27,7 @@ SINE Outputted Files
 		Tab separated text file containing the mapping ensembl ID, gene symbol, junction/region of interest, and whether the strand info matches between the junction/region and the peptide from the provided reference FASTA file
 
 •	neopeptides.tsv:
-		Tab separated table containing the assembled isoform, junction position (python-indexed), peptides (kmer length = 15), and the transcript ID.
+		Tab separated table containing the assembled isoform, junction position (python-indexed), peptides (kmer length = 15), and the transcript ID
 
 3. get_netmhcpan.sh / get_netmchpan_ROI.sh
 •	../{output_directory_fastas}/mhc_i/{Sample_Name}.fasta
