@@ -10,7 +10,7 @@ SINE Junctions Workflow
 2. In this workspace create the following output directories for subsequent steps
 	mkdir junction_files isoform_output isoform_output/tumors isoform_output/normals netmhcpan_analysis netmhcpan_analysis/fastas netmhcpan_analysis/patient_files_w_id mhcpan_results parsed_files final_results
 
-3. To compare the binding affinity scores potential neoantigens from alternatively spliced junctions; SINE uses a directory of normal samples to determine what the “wild-type” junction would be instead. Using the get_wt.sh script, we will define “wild-type” junctions as the most commonly expressed junction in the normal samples that shares a start or end site with each junction of interest. This step will then produce an individual junction of interest tsv file to be analyzed for every tumor and normal sample in the specified output directory.
+3. To compare the binding affinity scores potential neoantigens from alternatively spliced junctions; SINE uses a directory of normal samples to determine what the “wild-type” junction would be instead. Using the get_wt.sh script, we will define “wild-type” junctions as the most commonly expressed junction in the normal samples that shares a start or end site with each junction of interest. This step will then produce an individual junction of interest tsv file to be analyzed for every tumor and normal sample in the specified output directory. Note: The -w argument can be skipped if normal data is not available. This will still produce a ase_wt_pairs.tsv file required in subsequent steps.
 	../SINE/get_wt.sh \ 
 	-i ../SINE/examples/junctions_list.txt \
 	-b ../SINE/examples/tumors \
@@ -63,7 +63,7 @@ SINE Junctions Workflow
 	-o parsed_files \
 	-p ../SINE 
 
-8. Calculate the PHBR score for each peptide and the corresponding wild-type junction where available and output results tables.
+8. Calculate the PHBR score for each peptide and the corresponding wild-type junction where available and output results tables. Note: If the -w argument was skipped in step 3, the ase_wt_pairs.tsv will still be produced and should still be provided here for the -t argument.
 	../SINE/get_phbr.sh \
 	-i isoform_output \
 	-j junction_files/example_experiment_junctionsOfInterest_plusWT.tsv \

@@ -39,19 +39,19 @@ def create_peptides(mhc, short_seq, junc_aa_pos):
 #Concatenate the WT junction peptides found in the normals all together
 path = '{}'.format(args.isoforms_dir)
 norm_path = os.path.join(path, 'normals')
-full_wt_peptides = pd.DataFrame(columns = ['isoform', 'isoform_num', 'junc_aa_pos', 'peptides', 'junction', 'frame_selection'])
-for normal in os.listdir(norm_path):
-    wt_peptides_path = os.path.join(norm_path, normal, 'intermediate_results', 'neopeptides.tsv')
-    peps = pd.read_csv(wt_peptides_path, sep = '\t')
-    full_wt_peptides = full_wt_peptides.append(peps)
-full_wt_peptides = full_wt_peptides.drop_duplicates(subset = ['isoform', 'junc_aa_pos', 'peptides', 'junction', 'frame_selection'])
-full_wt_peptides = full_wt_peptides.reset_index(drop = True)
+if os.path.isdir(norm_path):
+    full_wt_peptides = pd.DataFrame(columns = ['isoform', 'isoform_num', 'junc_aa_pos', 'peptides', 'junction', 'frame_selection'])
+    for normal in os.listdir(norm_path):
+        wt_peptides_path = os.path.join(norm_path, normal, 'intermediate_results', 'neopeptides.tsv')
+        peps = pd.read_csv(wt_peptides_path, sep = '\t')
+        full_wt_peptides = full_wt_peptides.append(peps)
+    full_wt_peptides = full_wt_peptides.drop_duplicates(subset = ['isoform', 'junc_aa_pos', 'peptides', 'junction', 'frame_selection'])
+    full_wt_peptides = full_wt_peptides.reset_index(drop = True)
 
-#Concatenate this new master list of normal peptides to the neopeptides.tsv files (might as well save it as a new file) for each sample
-tum_path = os.path.join(path, 'tumors')
-for tumor in os.listdir(tum_path):
-    tum_peptides_path = os.path.join(tum_path, tumor, 'intermediate_results', 'neopeptides.tsv')
-    intermediate_dir = os.path.join(tum_path, tumor, 'intermediate_results')
+#Optionally concatenate this new master list of normal peptides to the neopeptides.tsv files
+
+    tum_peptides_path = os.path.join(path, 'tumors', args.patient_sample, 'intermediate_results', 'neopeptides.tsv')
+    intermediate_dir = os.path.join(path, 'tumors', args.patient_sample, 'intermediate_results')
     try:
         t_peps = pd.read_csv(tum_peptides_path, sep = '\t')
     except:
@@ -72,7 +72,10 @@ maf_dir = '{}'.format(args.output_directory_mapping)
 patient = '{}'.format(args.patient_sample)
     
 # read neopeptides.tsv file
-path = os.path.join(output_dir, 'tumors', patient, 'intermediate_results', 'all_peptides.tsv')
+if os.path.isdir(norm_path):
+    path = os.path.join(output_dir, 'tumors', patient, 'intermediate_results', 'all_peptides.tsv')
+else:
+    path = os.path.join(output_dir, 'tumors', patient, 'intermediate_results', 'neopeptides.tsv')
 df = pd.read_csv(path, sep='\t')
 df = df.dropna(subset=['isoform'])
 df['junc_aa_pos'] = df['junc_aa_pos'].apply(literal_eval)

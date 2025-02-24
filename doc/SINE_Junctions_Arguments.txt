@@ -1,13 +1,13 @@
 SINE Junctions Arguments:
 
-get_wt.sh
+initialize.sh
  Arguments:
 		-i      
 			New line separated list of junctions of interest to evaluate. Column header line should begin with “junction”. The junction strings should be formatted based on the reference GTF file seqname column used during alignment. Ex) Gencode reference GTF -> chr1:10001-10021. Ex) ENSEMBL reference GTF -> 1:10001-10021. WARNING: Providing ASE events that share a start/end site with each other will impact how SINE detects the WT event in the normal samples, be sure to verify that the list of events of interest are ones that are differentially expressed between tumor and normal.
 		-b      
 			Path to a Directory containing BAM files for the tumor samples of interest and STAR's SJ.tab.out files
    		-w
-			Path to a Directory containing BAM files for the normal samples and STAR's SJ.tab.out files
+			Path to a Directory containing BAM files for the normal samples and STAR's SJ.tab.out files [Optional]
 		-n      
 			Prefix to what the output files should be named
 		-o      
@@ -22,7 +22,7 @@ main.sh
 		-b
 			Path to Tumor RNA BAM file aligned to the genome for a single sample
 		-j
-			Path to Junctions of interest file for the corresponding sample generated in get_wt.sh
+			Path to Junctions of interest file for the corresponding sample generated in initialize.sh
 		-g
 			Path to GTF annotation file
 		-f
@@ -77,7 +77,7 @@ xls_parser.sh
 get_phbr.sh
  Arguments:
 		-j
-			Path to the full junctions table generated from get_wt.sh
+			Path to the full junctions table generated from initialize.sh
 		-i
 			Path to a Directory of isoforms generated from main.sh
 		-a
@@ -85,7 +85,7 @@ get_phbr.sh
 		-m
 			Path to a directory containing sample files with mapping IDs
    		-t
-			Path to a table containing the junctions of interest and their corresponding wild-type junction
+			Path to a table containing the junctions of interest and their corresponding wild-type junction from initialize.sh
 		-o
 			Path to a directory to store the results tables
 		-p
