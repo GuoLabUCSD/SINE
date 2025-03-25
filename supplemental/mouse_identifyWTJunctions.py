@@ -62,7 +62,7 @@ for patient in patient_list:
     star_df = star_df[star_df["chr"].str.contains("JH") == False]
     star_df = star_df[star_df["chr"].str.contains("GL") == False]
     star_df = star_df[star_df["chr"].str.contains("MU") == False]
-    star_df['chr'] = 'chr' + star_df['chr']
+    #star_df['chr'] = 'chr' + star_df['chr']
     
     # identify shared start/end
     star_df['chr_intron_start'] = star_df.apply(lambda x: '{}_{}'.format(x['chr'], x['intron_start']), axis=1)
@@ -88,7 +88,7 @@ for patient in norm_patient_list:
     star_df = star_df[star_df["chr"].str.contains("JH") == False]
     star_df = star_df[star_df["chr"].str.contains("GL") == False]
     star_df = star_df[star_df["chr"].str.contains("MU") == False]
-    star_df['chr'] = 'chr' + star_df['chr']
+    #star_df['chr'] = 'chr' + star_df['chr']
     
     # identify shared start/end
     star_df['chr_intron_start'] = star_df.apply(lambda x: '{}_{}'.format(x['chr'], x['intron_start']), axis=1)
