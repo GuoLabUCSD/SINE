@@ -59,6 +59,9 @@ SINE Outputted Files
 •	raw_results.txt:
 		Same as the above, however contains a summarized tab separated results table with only the most commonly occuring peptide and isoform across the samples for each event
 
+•	trimmed_results.txt:
+		Contains the consensus isoform sequence across the samples with the junction event and a trimmed 20mer sequence. This file also will label the exact junction location on the isoform.
+
 Results Files Column Descriptions
 •	ASE_junction/ROI:
 		Junction or Region of Interest Coordinates
@@ -91,7 +94,7 @@ Results Files Column Descriptions
 		The HLA alleles in each tumor sample that displayed the strongest ability to bind to the listed potential neoantigen
 
 •	WT_junction
-		Coordinates for the “wild-type” junction that shares a start or end site with the junction of interest.
+		Coordinates for the “wild-type” junction that shares a start or end site with the junction of interest
 
 •	WT_peptide
 		The highest binding kmer/peptide formed in the normal samples as a result of the “wild-type” junction
@@ -104,3 +107,9 @@ Results Files Column Descriptions
 
 •	Symbol
 		The HUGO gene symbol that corresponds to the splicing event
+
+•	Consensus Isoform
+		Most commonly occuring isoform sequence across the samples with the ASE. A single asterisk indicates the junction occurs between nucleotides making up that amino acid. Double asterisks indicate that the junction occurs BETWEEN the two amino acids inside the asterisks.
+
+•	Trimmed 20mer
+		Most commonly occuring isoform sequence trimmed to length 20, with approximately even lengths on each side of the junction
