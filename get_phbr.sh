@@ -54,3 +54,8 @@ python $pipeline_directory/supplemental/calc_phbr.py \
 --mapping_directory $mapping_directory \
 --paired_table $paired_table \
 --output_directory $output_directory
+
+#Run Trim Script
+python $pipeline_directory/supplemental/trim_results.py \
+--output_directory $output_directory
+
