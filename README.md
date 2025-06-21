@@ -13,7 +13,7 @@ SINE (Splice Isoform Neoantigen Evaluator) aims to identify potential neoantigen
 	* Note: bedtools should be available in your PATH variable
  * NetMHCpan
 	* Available at: https://services.healthtech.dtu.dk/services/NetMHCpan-4.1/
- * Python 3 (Tested on Version 3.10.13) with the following modules installed (Recommended to install through pip):
+ * Python 3 (Tested on Version 3.10.13) with the following modules installed (Recommended to install through conda):
 	* pandas (Tested on Version 1.5.3)
 	* pysam (Tested on Version 0.22.0)
    	* argparse (Tested on Version 1.1)
